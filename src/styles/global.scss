@@ -1,0 +1,94 @@
+/* 养老院工作人员端 — 温和可信的配色 */
+:root {
+  --staff-primary: #0d9488;
+  --staff-primary-light: #14b8a6;
+  --staff-primary-dark: #0f766e;
+  --staff-accent: #ea580c;
+  --staff-bg: #f0fdfa;
+  --staff-sidebar: #134e4a;
+  --staff-sidebar-hover: #115e59;
+  --staff-text: #1e293b;
+  --staff-muted: #64748b;
+  --staff-card-shadow: 0 1px 3px rgba(15, 118, 110, 0.08);
+  --staff-radius: 10px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  color: var(--staff-text);
+  background: var(--staff-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+.staff-page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--staff-text);
+  margin: 0 0 16px;
+}
+
+.staff-card {
+  background: #fff;
+  border-radius: var(--staff-radius);
+  box-shadow: var(--staff-card-shadow);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.staff-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.staff-stat-card {
+  border-radius: var(--staff-radius);
+  padding: 20px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    right: -20px;
+    top: -20px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .label {
+    font-size: 13px;
+    opacity: 0.92;
+    margin-bottom: 8px;
+  }
+
+  .value {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .sub {
+    margin-top: 8px;
+    font-size: 12px;
+    opacity: 0.85;
+  }
+}
