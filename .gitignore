@@ -1,4 +1,6 @@
 node_modules/
+.npm-cache/
+.idea/
 dist/
 .DS_Store
 *.log
