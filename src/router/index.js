@@ -129,10 +129,12 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem("staff_token");
-  const portal = localStorage.getItem("staff_portal") || "staff";
-  const homePath = portal === "nurse" ? "/nurse/dashboard" : "/staff/dashboard";
+  if (token && !store.state.user) {
+    await store.dispatch("restoreSession");
+  }
+  const homePath = store.getters.homePath || "/staff/dashboard";
   if (to.meta.public) {
     if (token && to.path === "/login") {
       next({ path: homePath });
@@ -144,9 +146,6 @@ router.beforeEach((to, from, next) => {
   if (!token) {
     next({ path: "/login", query: { redirect: to.fullPath } });
     return;
-  }
-  if (!store.state.user) {
-    store.dispatch("restoreSession");
   }
   next();
 });

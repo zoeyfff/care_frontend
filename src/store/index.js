@@ -5,18 +5,43 @@ const TOKEN_KEY = "staff_token";
 const USER_KEY = "staff_user";
 const PORTAL_KEY = "staff_portal";
 const PERMISSIONS_KEY = "staff_permissions";
+const ROLE_CODES_KEY = "staff_role_codes";
+
+function normalizeRoleCodes(roleCodes, permissions = []) {
+  if (Array.isArray(roleCodes) && roleCodes.length) return roleCodes;
+  if (permissions.some((p) => String(p).toUpperCase().startsWith("NURSE:"))) {
+    return ["NURSE"];
+  }
+  return ["ADMIN"];
+}
+
+function resolveHomePath(roleCodes = [], permissions = []) {
+  const roles = normalizeRoleCodes(roleCodes, permissions).map((r) =>
+    String(r).toUpperCase()
+  );
+  if (roles.includes("NURSE")) return "/nurse/dashboard";
+  if (roles.includes("FAMILY")) return "/family/dashboard";
+  return "/staff/dashboard";
+}
+
+function resolvePortalByHomePath(path) {
+  return String(path || "").startsWith("/nurse") ? "nurse" : "staff";
+}
 
 export default createStore({
   state: {
     sidebarCollapse: false,
     user: null,
     permissions: [],
+    roleCodes: [],
     portal: "staff", // staff | nurse（演示：登录选择）
   },
   getters: {
     displayName: (s) => s.user?.real_name || s.user?.username || "工作人员",
     portal: (s) => s.portal,
     permissions: (s) => s.permissions,
+    roleCodes: (s) => s.roleCodes,
+    homePath: (s) => resolveHomePath(s.roleCodes, s.permissions),
   },
   mutations: {
     SET_SIDEBAR(state, v) {
@@ -31,16 +56,20 @@ export default createStore({
     SET_PERMISSIONS(state, permissions) {
       state.permissions = Array.isArray(permissions) ? permissions : [];
     },
+    SET_ROLE_CODES(state, roleCodes) {
+      state.roleCodes = Array.isArray(roleCodes) ? roleCodes : [];
+    },
     SET_PORTAL(state, portal) {
       state.portal = portal || "staff";
     },
     CLEAR_USER(state) {
       state.user = null;
       state.permissions = [];
+      state.roleCodes = [];
     },
   },
   actions: {
-    async login({ commit }, { username, password, portal }) {
+    async login({ commit }, { username, password }) {
       const res = await request.post("/auth/login", {
         username,
         password,
@@ -52,26 +81,36 @@ export default createStore({
       }
       localStorage.setItem(TOKEN_KEY, token);
       localStorage.setItem(USER_KEY, JSON.stringify(user));
-      localStorage.setItem(PORTAL_KEY, portal || "staff");
       localStorage.setItem(PERMISSIONS_KEY, JSON.stringify([]));
+      localStorage.setItem(ROLE_CODES_KEY, JSON.stringify([]));
 
-      commit("SET_PORTAL", portal || "staff");
       commit("SET_USER", user);
       commit("SET_PERMISSIONS", []);
+      commit("SET_ROLE_CODES", []);
 
       // 可选拉取权限，失败不影响已登录态
       try {
         const me = await request.get("/auth/me");
         const meUser = me?.data?.user;
         const permissions = me?.data?.permissions || [];
+        const roleCodes = normalizeRoleCodes(me?.data?.roleCodes, permissions);
         if (meUser) {
           localStorage.setItem(USER_KEY, JSON.stringify(meUser));
           commit("SET_USER", meUser);
         }
         localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(permissions));
+        localStorage.setItem(ROLE_CODES_KEY, JSON.stringify(roleCodes));
+        const homePath = resolveHomePath(roleCodes, permissions);
+        localStorage.setItem(PORTAL_KEY, resolvePortalByHomePath(homePath));
         commit("SET_PERMISSIONS", permissions);
+        commit("SET_ROLE_CODES", roleCodes);
+        commit("SET_PORTAL", resolvePortalByHomePath(homePath));
       } catch (e) {
-        // ignore
+        const roleCodes = normalizeRoleCodes([], []);
+        localStorage.setItem(ROLE_CODES_KEY, JSON.stringify(roleCodes));
+        localStorage.setItem(PORTAL_KEY, "staff");
+        commit("SET_ROLE_CODES", roleCodes);
+        commit("SET_PORTAL", "staff");
       }
     },
 
@@ -86,6 +125,7 @@ export default createStore({
 
       const rawUser = localStorage.getItem(USER_KEY);
       const rawPermissions = localStorage.getItem(PERMISSIONS_KEY);
+      const rawRoleCodes = localStorage.getItem(ROLE_CODES_KEY);
       if (rawUser) {
         try {
           commit("SET_USER", JSON.parse(rawUser));
@@ -100,22 +140,36 @@ export default createStore({
           commit("SET_PERMISSIONS", []);
         }
       }
+      if (rawRoleCodes) {
+        try {
+          commit("SET_ROLE_CODES", JSON.parse(rawRoleCodes));
+        } catch (e) {
+          commit("SET_ROLE_CODES", []);
+        }
+      }
 
       // 启动时校验并刷新当前用户
       try {
         const me = await request.get("/auth/me");
         const meUser = me?.data?.user;
         const permissions = me?.data?.permissions || [];
+        const roleCodes = normalizeRoleCodes(me?.data?.roleCodes, permissions);
         if (meUser) {
           localStorage.setItem(USER_KEY, JSON.stringify(meUser));
           commit("SET_USER", meUser);
         }
         localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(permissions));
+        localStorage.setItem(ROLE_CODES_KEY, JSON.stringify(roleCodes));
+        const homePath = resolveHomePath(roleCodes, permissions);
+        localStorage.setItem(PORTAL_KEY, resolvePortalByHomePath(homePath));
         commit("SET_PERMISSIONS", permissions);
+        commit("SET_ROLE_CODES", roleCodes);
+        commit("SET_PORTAL", resolvePortalByHomePath(homePath));
       } catch (e) {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
         localStorage.removeItem(PERMISSIONS_KEY);
+        localStorage.removeItem(ROLE_CODES_KEY);
         commit("CLEAR_USER");
       }
     },
@@ -130,6 +184,7 @@ export default createStore({
       localStorage.removeItem(USER_KEY);
       localStorage.removeItem(PORTAL_KEY);
       localStorage.removeItem(PERMISSIONS_KEY);
+      localStorage.removeItem(ROLE_CODES_KEY);
       commit("CLEAR_USER");
     },
   },

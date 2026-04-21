@@ -15,9 +15,6 @@
         label-position="top"
         class="login-form"
       >
-        <el-form-item label="登录入口" prop="portal">
-          <el-segmented v-model="form.portal" :options="portalOptions" />
-        </el-form-item>
         <el-form-item label="账号" prop="username">
           <el-input
             v-model="form.username"
@@ -74,16 +71,10 @@ const route = useRoute();
 const formRef = ref();
 const loading = ref(false);
 const form = reactive({
-  portal: "staff",
-  username: "admin",
-  password: "123456",
+  username: "",
+  password: "",
 });
-const portalOptions = [
-  { label: "工作人员端", value: "staff" },
-  { label: "护理人员端", value: "nurse" },
-];
 const rules = {
-  portal: [{ required: true, message: "请选择入口", trigger: "change" }],
   username: [{ required: true, message: "请输入账号", trigger: "blur" }],
   password: [{ required: true, message: "请输入密码", trigger: "blur" }],
 };
@@ -99,12 +90,9 @@ async function submit() {
     await store.dispatch("login", {
       username: form.username,
       password: form.password,
-      portal: form.portal,
     });
     ElMessage.success("欢迎回来");
-    const redirect =
-      route.query.redirect ||
-      (form.portal === "nurse" ? "/nurse/dashboard" : "/staff/dashboard");
+    const redirect = route.query.redirect || store.getters.homePath;
     router.replace(redirect);
   } catch (e) {
     // 错误提示由请求拦截器统一处理
