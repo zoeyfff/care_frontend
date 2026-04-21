@@ -1,5 +1,5 @@
 /**
- * 工作人员端 API 层：默认走本地 Mock，对接 SpringBoot 时将 USE_MOCK 改为 false 并保证路径与后端一致。
+ * 工作人员端 API 层：通过环境变量控制是否使用本地 Mock。
  */
 import request from "@/utils/request";
 import {
@@ -22,7 +22,11 @@ import {
   staffMockApi,
 } from "@/mock/staffData";
 
-export const USE_MOCK = true;
+// Vue CLI 环境变量：`.env*` 中以 VUE_APP_ 开头的变量才会被注入
+// - VUE_APP_USE_MOCK=true/false
+// 默认 false：优先对接后端真实接口
+export const USE_MOCK =
+  String(process.env.VUE_APP_USE_MOCK || "false") === "true";
 
 function clone(obj) {
   return JSON.parse(JSON.stringify(obj));

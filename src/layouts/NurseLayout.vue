@@ -133,9 +133,9 @@ function goStaff() {
   router.push("/staff/dashboard");
 }
 
-function onUserCommand(cmd) {
+async function onUserCommand(cmd) {
   if (cmd === "logout") {
-    store.dispatch("logout");
+    await store.dispatch("logout");
     router.push("/login");
   }
 }

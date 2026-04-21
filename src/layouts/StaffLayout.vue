@@ -134,9 +134,9 @@ function toggle() {
   store.commit("TOGGLE_SIDEBAR");
 }
 
-function onUserCommand(cmd) {
+async function onUserCommand(cmd) {
   if (cmd === "logout") {
-    store.dispatch("logout");
+    await store.dispatch("logout");
     router.push("/login");
   }
 }

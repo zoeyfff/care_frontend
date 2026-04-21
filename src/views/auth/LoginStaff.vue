@@ -96,9 +96,9 @@ async function submit() {
   }
   loading.value = true;
   try {
-    await new Promise((r) => setTimeout(r, 400));
-    await store.dispatch("loginDemo", {
+    await store.dispatch("login", {
       username: form.username,
+      password: form.password,
       portal: form.portal,
     });
     ElMessage.success("欢迎回来");
@@ -106,6 +106,8 @@ async function submit() {
       route.query.redirect ||
       (form.portal === "nurse" ? "/nurse/dashboard" : "/staff/dashboard");
     router.replace(redirect);
+  } catch (e) {
+    // 错误提示由请求拦截器统一处理
   } finally {
     loading.value = false;
   }

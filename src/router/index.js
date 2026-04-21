@@ -137,9 +137,11 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("staff_token");
+  const portal = localStorage.getItem("staff_portal") || "staff";
+  const homePath = portal === "nurse" ? "/nurse/dashboard" : "/staff/dashboard";
   if (to.meta.public) {
     if (token && to.path === "/login") {
-      next({ path: "/staff/dashboard" });
+      next({ path: homePath });
       return;
     }
     next();
