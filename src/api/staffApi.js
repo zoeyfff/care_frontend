@@ -157,6 +157,80 @@ export async function getNotices() {
   return data;
 }
 
+export async function createNotice(payload) {
+  if (USE_MOCK) {
+    return {
+      id: Date.now(),
+      ...payload,
+      create_time: new Date().toISOString().slice(0, 19).replace("T", " "),
+    };
+  }
+  const { data } = await request.post("/notices", payload);
+  return data;
+}
+
+export async function getNoticeFiles(noticeId) {
+  if (USE_MOCK) return { list: clone(mockFiles), total: mockFiles.length };
+  const { data } = await request.get(`/notices/${noticeId}`);
+  const files = data?.files || [];
+  return { list: files, total: files.length };
+}
+
+export async function getNoticeDetail(noticeId) {
+  if (USE_MOCK) {
+    const n = clone(mockNotices[0] || {});
+    n.files = clone(mockFiles);
+    return n;
+  }
+  const { data } = await request.get(`/notices/${noticeId}`);
+  return data;
+}
+
+export async function uploadNoticeFile(noticeId, file, onProgress) {
+  if (USE_MOCK) {
+    const now = new Date().toISOString().slice(0, 19).replace("T", " ");
+    return {
+      id: Date.now(),
+      file_name: file.name,
+      file_size: file.size,
+      uploader_name: "当前用户",
+      create_time: now,
+      file_url: "",
+      notice_id: noticeId,
+    };
+  }
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await request.post(`/notices/${noticeId}/files`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    onUploadProgress: (evt) => {
+      if (!onProgress || !evt.total) return;
+      onProgress(Math.round((evt.loaded * 100) / evt.total));
+    },
+  });
+  return data;
+}
+
+export async function downloadNoticeFile(noticeId, fileId) {
+  if (USE_MOCK) {
+    return { blob: new Blob([]), filename: "mock-file.txt" };
+  }
+  const res = await request.get(`/notices/${noticeId}/files/${fileId}/download`, {
+    responseType: "blob",
+  });
+  const blob = res?.data instanceof Blob ? res.data : res;
+  const disposition = res?.headers?.["content-disposition"] || "";
+  const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i);
+  const filename = decodeURIComponent(match?.[1] || match?.[2] || "download.bin");
+  return { blob, filename };
+}
+
+export async function deleteNoticeFile(noticeId, fileId) {
+  if (USE_MOCK) return { ok: true };
+  await request.delete(`/notices/${noticeId}/files/${fileId}`);
+  return { ok: true };
+}
+
 export async function getActivities() {
   if (USE_MOCK)
     return { list: clone(mockActivities), total: mockActivities.length };

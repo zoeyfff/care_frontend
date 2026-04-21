@@ -47,10 +47,6 @@
             <el-icon><Bell /></el-icon>
             <span>公告与活动</span>
           </el-menu-item>
-          <el-menu-item index="/staff/files">
-            <el-icon><FolderOpened /></el-icon>
-            <span>文件中心</span>
-          </el-menu-item>
           <el-menu-item index="/staff/data-io">
             <el-icon><Upload /></el-icon>
             <span>数据导入导出</span>

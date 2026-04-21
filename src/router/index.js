@@ -66,12 +66,6 @@ const routes = [
         meta: { title: "公告与活动" },
       },
       {
-        path: "files",
-        name: "staff-files",
-        component: () => import("../views/staff/FileCenter.vue"),
-        meta: { title: "文件中心" },
-      },
-      {
         path: "data-io",
         name: "staff-data-io",
         component: () => import("../views/staff/DataImportExport.vue"),
