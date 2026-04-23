@@ -49,12 +49,53 @@
             <el-option label="⏰ 未完成" :value="0" />
             <el-option label="✅ 已完成" :value="1" />
           </el-select>
+          <el-select
+            v-model="filterFrequency"
+            placeholder="频率"
+            clearable
+            style="width: 120px"
+            @change="load"
+          >
+            <el-option label="单次" value="ONCE" />
+            <el-option label="每天" value="DAILY" />
+            <el-option label="每周" value="WEEKLY" />
+            <el-option label="每月" value="MONTHLY" />
+          </el-select>
+          <el-select
+            v-model="filterAssignedTo"
+            placeholder="执行人"
+            clearable
+            style="width: 150px"
+            @change="load"
+          >
+            <el-option
+              v-for="u in nurseOptions"
+              :key="u.id"
+              :label="u.real_name || u.username"
+              :value="u.id"
+            />
+          </el-select>
+          <el-switch
+            v-model="todayOnly"
+            inline-prompt
+            active-text="今日任务"
+            inactive-text="全部任务"
+            @change="load"
+          />
           <el-button @click="load" class="refresh-btn">
             <el-icon><Refresh /></el-icon>
             刷新
           </el-button>
         </div>
         <div class="toolbar-right">
+          <el-button
+            type="warning"
+            plain
+            :disabled="!selectedTaskIds.length"
+            @click="openBatchAssign"
+          >
+            批量分配
+          </el-button>
           <el-button type="primary" @click="openTask()" class="create-btn">
             <el-icon><Plus /></el-icon>
             新建任务
@@ -69,7 +110,9 @@
         v-loading="loading"
         class="task-table"
         :row-class-name="tableRowClassName"
+        @selection-change="onSelectionChange"
       >
+        <el-table-column type="selection" width="48" />
         <el-table-column prop="elder_name" label="长者" width="110">
           <template #default="{ row }">
             <div class="elder-cell">
@@ -85,6 +128,23 @@
               <span :class="['task-priority', getPriorityClass(row)]"></span>
               <span class="task-name">{{ row.task_name }}</span>
             </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="频率" width="100">
+          <template #default="{ row }">
+            <el-tag size="small" effect="plain">{{ frequencyLabel(row.frequency_type) }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="执行人" width="120">
+          <template #default="{ row }">
+            {{ row.assigned_to_name || "未分配" }}
+          </template>
+        </el-table-column>
+        <el-table-column label="优先级" width="90">
+          <template #default="{ row }">
+            <el-tag :type="priorityTagType(row.priority)" size="small">
+              {{ priorityLabel(row.priority) }}
+            </el-tag>
           </template>
         </el-table-column>
         
@@ -144,6 +204,9 @@
                 <el-icon><Edit /></el-icon>
                 编辑
               </el-button>
+              <el-button link type="warning" @click="openAssign(row)">
+                分配
+              </el-button>
             </div>
           </template>
         </el-table-column>
@@ -196,6 +259,64 @@
             style="width: 100%"
           />
         </el-form-item>
+        <el-form-item label="任务频率">
+          <el-select v-model="taskForm.frequency_type" style="width: 100%">
+            <el-option label="单次" value="ONCE" />
+            <el-option label="每天" value="DAILY" />
+            <el-option label="每周" value="WEEKLY" />
+            <el-option label="每月" value="MONTHLY" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="任务周期">
+          <el-row :gutter="8" style="width: 100%">
+            <el-col :span="12">
+              <el-date-picker
+                v-model="taskForm.start_date"
+                type="date"
+                value-format="YYYY-MM-DD"
+                placeholder="开始日期"
+                style="width: 100%"
+              />
+            </el-col>
+            <el-col :span="12">
+              <el-date-picker
+                v-model="taskForm.end_date"
+                type="date"
+                value-format="YYYY-MM-DD"
+                placeholder="结束日期"
+                style="width: 100%"
+              />
+            </el-col>
+          </el-row>
+        </el-form-item>
+        <el-form-item label="建议时段">
+          <el-time-picker
+            v-model="taskForm.preferred_time"
+            value-format="HH:mm:ss"
+            placeholder="建议执行时间"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="优先级">
+          <el-radio-group v-model="taskForm.priority">
+            <el-radio :value="1">普通</el-radio>
+            <el-radio :value="2">重要</el-radio>
+            <el-radio :value="3">紧急</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="执行人员">
+          <el-select v-model="taskForm.assigned_to" clearable filterable style="width: 100%">
+            <el-option
+              v-for="u in nurseOptions"
+              :key="u.id"
+              :label="u.real_name || u.username"
+              :value="u.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="操作说明">
+          <el-input v-model="taskForm.instruction" type="textarea" :rows="2" />
+        </el-form-item>
         <el-form-item label="备注">
           <el-input 
             v-model="taskForm.remark" 
@@ -210,6 +331,50 @@
         <el-button type="primary" @click="saveTask">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="assignDlg" title="任务分配" width="420px" destroy-on-close>
+      <el-form label-width="90px">
+        <el-form-item label="任务名称">
+          <el-input :model-value="assignForm.task_name" disabled />
+        </el-form-item>
+        <el-form-item label="执行人" required>
+          <el-select v-model="assignForm.assigned_to" filterable style="width: 100%">
+            <el-option
+              v-for="u in nurseOptions"
+              :key="u.id"
+              :label="u.real_name || u.username"
+              :value="u.id"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="assignDlg = false">取消</el-button>
+        <el-button type="primary" @click="submitAssign">确认分配</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="batchAssignDlg" title="批量分配任务" width="420px" destroy-on-close>
+      <el-form label-width="90px">
+        <el-form-item label="已选任务">
+          <el-input :model-value="`${selectedTaskIds.length} 条`" disabled />
+        </el-form-item>
+        <el-form-item label="执行人" required>
+          <el-select v-model="batchAssignTo" filterable style="width: 100%">
+            <el-option
+              v-for="u in nurseOptions"
+              :key="u.id"
+              :label="u.real_name || u.username"
+              :value="u.id"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="batchAssignDlg = false">取消</el-button>
+        <el-button type="primary" @click="submitBatchAssign">确认分配</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -217,20 +382,50 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { Refresh, Plus, CircleCheck, Edit, Calendar } from '@element-plus/icons-vue';
-import { getCareTasks, saveCareTask, getElderList } from "@/api/staffApi";
+import {
+  getCareTasks,
+  saveCareTask,
+  getElderList,
+  getUsers,
+  assignCareTask,
+  executeCareTask,
+  getTodayCareTasks,
+  batchAssignCareTasks,
+} from "@/api/staffApi";
 
 const loading = ref(false);
 const list = ref([]);
 const filterStatus = ref(null);
+const filterFrequency = ref("");
+const filterAssignedTo = ref(null);
+const todayOnly = ref(false);
 const elderOptions = ref([]);
+const nurseOptions = ref([]);
 const dlg = ref(false);
+const assignDlg = ref(false);
+const batchAssignDlg = ref(false);
+const selectedTaskIds = ref([]);
+const batchAssignTo = ref(null);
 const taskForm = reactive({
   id: null,
   elder_id: null,
   task_name: "",
   execute_time: "",
+  frequency_type: "ONCE",
+  assigned_to: null,
+  assigned_to_name: "",
+  start_date: "",
+  end_date: "",
+  preferred_time: "",
+  priority: 1,
+  instruction: "",
   remark: "",
   status: 0,
+});
+const assignForm = reactive({
+  id: null,
+  task_name: "",
+  assigned_to: null,
 });
 
 // 计算属性
@@ -283,6 +478,25 @@ function getPriorityClass(row) {
   return 'priority-normal';
 }
 
+function frequencyLabel(v) {
+  return (
+    {
+      ONCE: "单次",
+      DAILY: "每天",
+      WEEKLY: "每周",
+      MONTHLY: "每月",
+    }[v] || "单次"
+  );
+}
+
+function priorityLabel(v) {
+  return ({ 1: "普通", 2: "重要", 3: "紧急" }[Number(v)] || "普通");
+}
+
+function priorityTagType(v) {
+  return ({ 1: "info", 2: "warning", 3: "danger" }[Number(v)] || "info");
+}
+
 // 表格行样式
 function tableRowClassName({ row }) {
   if (row.status === 1) return 'completed-row';
@@ -301,7 +515,11 @@ async function load() {
     if (filterStatus.value !== "" && filterStatus.value !== null) {
       params.status = filterStatus.value;
     }
-    const { list: rows } = await getCareTasks(params);
+    if (filterFrequency.value) params.frequency_type = filterFrequency.value;
+    if (filterAssignedTo.value) params.assigned_to = filterAssignedTo.value;
+    const { list: rows } = todayOnly.value
+      ? await getTodayCareTasks(params)
+      : await getCareTasks(params);
     list.value = rows;
   } finally {
     loading.value = false;
@@ -313,6 +531,14 @@ async function loadElders() {
   elderOptions.value = rows;
 }
 
+async function loadNurses() {
+  const { list } = await getUsers();
+  nurseOptions.value = (list || []).filter((u) => {
+    const roles = Array.isArray(u.roles) ? u.roles : [];
+    return roles.includes("护理员") || roles.includes("护理主管");
+  });
+}
+
 function openTask(row) {
   if (row) {
     Object.assign(taskForm, {
@@ -320,6 +546,14 @@ function openTask(row) {
       elder_id: row.elder_id,
       task_name: row.task_name,
       execute_time: row.execute_time,
+      frequency_type: row.frequency_type || "ONCE",
+      assigned_to: row.assigned_to || null,
+      assigned_to_name: row.assigned_to_name || "",
+      start_date: row.start_date || "",
+      end_date: row.end_date || "",
+      preferred_time: row.preferred_time || "",
+      priority: Number(row.priority || 1),
+      instruction: row.instruction || "",
       remark: row.remark,
       status: row.status,
     });
@@ -329,6 +563,14 @@ function openTask(row) {
       elder_id: null,
       task_name: "",
       execute_time: "",
+      frequency_type: "ONCE",
+      assigned_to: null,
+      assigned_to_name: "",
+      start_date: "",
+      end_date: "",
+      preferred_time: "",
+      priority: 1,
+      instruction: "",
       remark: "",
       status: 0,
     });
@@ -343,7 +585,13 @@ async function saveTask() {
   }
   const name =
     elderOptions.value.find((e) => e.id === taskForm.elder_id)?.name || "";
-  const saved = await saveCareTask({ ...taskForm, elder_name: name });
+  const assignee =
+    nurseOptions.value.find((u) => u.id === taskForm.assigned_to)?.real_name || "";
+  const saved = await saveCareTask({
+    ...taskForm,
+    elder_name: name,
+    assigned_to_name: assignee,
+  });
   if (taskForm.id) {
     const i = list.value.findIndex((x) => x.id === taskForm.id);
     if (i >= 0)
@@ -357,13 +605,62 @@ async function saveTask() {
 
 async function complete(row) {
   const remark = row.remark || "已完成";
-  await saveCareTask({ ...row, status: 1, remark });
+  await executeCareTask(row.id, { remark });
   row.status = 1;
   ElMessage.success("已标记完成");
 }
 
+function openAssign(row) {
+  assignForm.id = row.id;
+  assignForm.task_name = row.task_name;
+  assignForm.assigned_to = row.assigned_to || null;
+  assignDlg.value = true;
+}
+
+function onSelectionChange(rows) {
+  selectedTaskIds.value = rows.map((r) => r.id);
+}
+
+function openBatchAssign() {
+  batchAssignTo.value = null;
+  batchAssignDlg.value = true;
+}
+
+async function submitAssign() {
+  if (!assignForm.assigned_to) {
+    ElMessage.warning("请选择执行人");
+    return;
+  }
+  const assignee = nurseOptions.value.find((u) => u.id === assignForm.assigned_to);
+  await assignCareTask(assignForm.id, {
+    assigned_to: assignForm.assigned_to,
+    assigned_to_name: assignee?.real_name || assignee?.username || "",
+  });
+  ElMessage.success("任务已分配");
+  assignDlg.value = false;
+  load();
+}
+
+async function submitBatchAssign() {
+  if (!batchAssignTo.value) {
+    ElMessage.warning("请选择执行人");
+    return;
+  }
+  const assignee = nurseOptions.value.find((u) => u.id === batchAssignTo.value);
+  await batchAssignCareTasks({
+    task_ids: selectedTaskIds.value,
+    assigned_to: batchAssignTo.value,
+    assigned_to_name: assignee?.real_name || assignee?.username || "",
+  });
+  ElMessage.success(`已批量分配 ${selectedTaskIds.value.length} 条任务`);
+  batchAssignDlg.value = false;
+  selectedTaskIds.value = [];
+  load();
+}
+
 onMounted(async () => {
   await loadElders();
+  await loadNurses();
   load();
 });
 </script>

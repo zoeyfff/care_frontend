@@ -2,6 +2,55 @@
   <div>
     <h1 class="staff-page-title">健康监测与医疗记录</h1>
     <p class="sub">体征数据、用药记录</p>
+    <div class="staff-card room-template-card">
+      <div class="template-title">房间责任护理员模板</div>
+      <div class="staff-toolbar">
+        <el-select
+          v-model="templateForm.room_nos"
+          multiple
+          collapse-tags
+          filterable
+          clearable
+          style="width: 360px"
+          placeholder="选择一个或多个房间"
+        >
+          <el-option
+            v-for="r in rooms"
+            :key="r.id"
+            :label="r.room_no"
+            :value="r.room_no"
+          />
+        </el-select>
+        <el-select
+          v-model="templateForm.nurse_id"
+          filterable
+          clearable
+          style="width: 240px"
+          placeholder="选择责任护理员"
+        >
+          <el-option
+            v-for="u in nurseOptions"
+            :key="u.id"
+            :label="u.real_name || u.username"
+            :value="u.id"
+          />
+        </el-select>
+        <el-button type="primary" @click="saveRoomNurseTemplate">
+          批量设置模板
+        </el-button>
+      </div>
+      <el-table :data="roomTemplateRows" stripe border size="small">
+        <el-table-column prop="room_no" label="房间" width="120" />
+        <el-table-column prop="nurse_name" label="责任护理员" min-width="140" />
+        <el-table-column label="操作" width="90">
+          <template #default="{ row }">
+            <el-button link type="danger" @click="clearRoomTemplate(row.room_no)">
+              清除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
 
     <el-tabs v-model="tab" type="border-card" class="staff-card tabs-wrap">
       <!-- 体征记录 Tab -->
@@ -46,12 +95,12 @@
           <div class="chart-header">
             <span class="chart-title">各长者体温趋势（最近7次）</span>
             <el-tag type="info" size="small"
-              >共 {{ tempTrendCards.length }} 位长者</el-tag
+              >共 {{ filteredTempTrendCards.length }} 位长者</el-tag
             >
           </div>
-          <div v-if="tempTrendCards.length" class="trend-grid">
+          <div v-if="filteredTempTrendCards.length" class="trend-grid">
             <div
-              v-for="item in tempTrendCards"
+              v-for="item in filteredTempTrendCards"
               :key="item.elderName"
               class="trend-card"
             >
@@ -178,6 +227,41 @@
       destroy-on-close
     >
       <el-form label-width="100px">
+        <el-form-item label="房间" required>
+          <el-select
+            v-model="signForm.room_nos"
+            multiple
+            collapse-tags
+            filterable
+            style="width: 100%"
+            placeholder="按房间批量选择（自动匹配责任护理员）"
+          >
+            <el-option
+              v-for="r in rooms"
+              :key="r.id"
+              :label="r.room_no"
+              :value="r.room_no"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="批量长者">
+          <el-select
+            v-model="signForm.elder_ids"
+            multiple
+            collapse-tags
+            filterable
+            clearable
+            style="width: 100%"
+            placeholder="可多选长者（为空则使用单个长者）"
+          >
+            <el-option
+              v-for="e in signRoomElders"
+              :key="e.id"
+              :label="`${e.name}（${e.room_no || '-'}）`"
+              :value="e.id"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="长者" required>
           <el-select v-model="signForm.elder_id" filterable style="width: 100%">
             <el-option
@@ -220,6 +304,41 @@
     <!-- 新增用药对话框 -->
     <el-dialog v-model="medDlg" title="用药记录" width="480px" destroy-on-close>
       <el-form label-width="100px">
+        <el-form-item label="房间" required>
+          <el-select
+            v-model="medForm.room_nos"
+            multiple
+            collapse-tags
+            filterable
+            style="width: 100%"
+            placeholder="按房间批量选择（自动匹配责任护理员）"
+          >
+            <el-option
+              v-for="r in rooms"
+              :key="r.id"
+              :label="r.room_no"
+              :value="r.room_no"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="批量长者">
+          <el-select
+            v-model="medForm.elder_ids"
+            multiple
+            collapse-tags
+            filterable
+            clearable
+            style="width: 100%"
+            placeholder="可多选长者（为空则使用单个长者）"
+          >
+            <el-option
+              v-for="e in medRoomElders"
+              :key="e.id"
+              :label="`${e.name}（${e.room_no || '-'}）`"
+              :value="e.id"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="长者" required>
           <el-select v-model="medForm.elder_id" filterable style="width: 100%">
             <el-option
@@ -265,6 +384,11 @@ import {
   getMedicationRecords,
   saveMedicationRecord,
   getElderList,
+  getRoomList,
+  getUsers,
+  batchSetRoomNurseTemplate,
+  getRoomNurseTemplates,
+  deleteRoomNurseTemplate,
 } from "@/api/staffApi";
 
 const tab = ref("signs");
@@ -273,6 +397,8 @@ const loadingMeds = ref(false);
 const signs = ref([]);
 const meds = ref([]);
 const elders = ref([]);
+const rooms = ref([]);
+const nurseOptions = ref([]);
 const signDlg = ref(false);
 const medDlg = ref(false);
 const signSearchKeyword = ref("");
@@ -280,6 +406,8 @@ const medSearchKeyword = ref("");
 const selectedElderForMed = ref(null);
 
 const signForm = reactive({
+  room_nos: [],
+  elder_ids: [],
   elder_id: null,
   temperature: 36.5,
   blood_pressure: "",
@@ -288,11 +416,47 @@ const signForm = reactive({
 });
 
 const medForm = reactive({
+  room_nos: [],
+  elder_ids: [],
   elder_id: null,
   medicine_name: "",
   dosage: "",
   take_time: "",
   remark: "",
+});
+const roomNurseTemplateMap = ref({});
+const templateForm = reactive({
+  room_nos: [],
+  nurse_id: null,
+});
+
+const eldersByRoom = computed(() => {
+  const room = {};
+  elders.value.forEach((e) => {
+    if (!room[e.room_no]) room[e.room_no] = [];
+    room[e.room_no].push(e);
+  });
+  return room;
+});
+const roomTemplateRows = computed(() => {
+  return Object.entries(roomNurseTemplateMap.value).map(([room_no, nurse_id]) => {
+    const nurse = nurseOptions.value.find((u) => Number(u.id) === Number(nurse_id));
+    return {
+      room_no,
+      nurse_id,
+      nurse_name: nurse?.real_name || nurse?.username || "未知护理员",
+    };
+  });
+});
+const signRoomElders = computed(() => {
+  if (!signForm.room_nos.length) return elders.value;
+  const roomSet = new Set(signForm.room_nos);
+  return elders.value.filter((e) => roomSet.has(e.room_no));
+});
+const medRoomElders = computed(() => {
+  if (!medForm.room_nos.length) return elders.value;
+  const roomSet = new Set(medForm.room_nos);
+  return elders.value.filter((e) => roomSet.has(e.room_no));
 });
 
 // 过滤后的体征列表
@@ -394,6 +558,12 @@ const tempTrendCards = computed(() => {
     })
     .sort((a, b) => a.elderName.localeCompare(b.elderName, "zh-CN"));
 });
+const filteredTempTrendCards = computed(() => {
+  if (!signSearchKeyword.value) return tempTrendCards.value;
+  return tempTrendCards.value.filter((x) =>
+    String(x.elderName || "").includes(signSearchKeyword.value)
+  );
+});
 
 // 用药汇总卡片数据
 const medSummaryCards = computed(() => {
@@ -475,6 +645,8 @@ async function loadMeds() {
 
 function openSign() {
   Object.assign(signForm, {
+    room_nos: [],
+    elder_ids: [],
     elder_id: elders.value[0]?.id || null,
     temperature: 36.5,
     blood_pressure: "",
@@ -486,6 +658,8 @@ function openSign() {
 
 function openMed() {
   Object.assign(medForm, {
+    room_nos: [],
+    elder_ids: [],
     elder_id: elders.value[0]?.id || null,
     medicine_name: "",
     dosage: "",
@@ -496,32 +670,136 @@ function openMed() {
 }
 
 async function saveSign() {
-  if (!signForm.elder_id) {
-    ElMessage.warning("请选择长者");
+  const targetIds = signForm.elder_ids.length
+    ? signForm.elder_ids
+    : signForm.elder_id
+      ? [signForm.elder_id]
+      : [];
+  if (!targetIds.length) {
+    ElMessage.warning("请选择长者（支持批量）");
     return;
   }
-  const name = elders.value.find((e) => e.id === signForm.elder_id)?.name;
-  const row = await saveHealthRecord({ ...signForm, elder_name: name });
-  signs.value.unshift(row);
-  ElMessage.success("已保存");
+  const missingRooms = [...new Set(
+    targetIds
+      .map((id) => elders.value.find((e) => e.id === id)?.room_no)
+      .filter((roomNo) => roomNo && !roomNurseTemplateMap.value[roomNo])
+  )];
+  if (missingRooms.length) {
+    ElMessage.warning(`以下房间未配置责任护理员：${missingRooms.join("、")}`);
+    return;
+  }
+  const roomSet = new Set(signForm.room_nos || []);
+  const rows = [];
+  for (const elderId of targetIds) {
+    const elder = elders.value.find((e) => e.id === elderId);
+    if (roomSet.size && !roomSet.has(elder?.room_no)) continue;
+    const assignedId = roomNurseTemplateMap.value[elder?.room_no] || null;
+    const assignee = nurseOptions.value.find((u) => Number(u.id) === Number(assignedId));
+    const payload = {
+      elder_id: elderId,
+      elder_name: elder?.name,
+      temperature: signForm.temperature,
+      blood_pressure: signForm.blood_pressure,
+      heart_rate: signForm.heart_rate,
+      record_time: signForm.record_time,
+      recorded_by: assignedId,
+      recorded_by_name: assignee?.real_name || assignee?.username || "",
+      abnormal_flag: Number(signForm.temperature) >= 37.3 ? 1 : 0,
+    };
+    // eslint-disable-next-line no-await-in-loop
+    rows.push(await saveHealthRecord(payload));
+  }
+  signs.value = [...rows, ...signs.value];
+  ElMessage.success(`已保存 ${rows.length} 条体征记录`);
   signDlg.value = false;
 }
 
 async function saveMed() {
-  if (!medForm.elder_id || !medForm.medicine_name) {
+  const targetIds = medForm.elder_ids.length
+    ? medForm.elder_ids
+    : medForm.elder_id
+      ? [medForm.elder_id]
+      : [];
+  if (!targetIds.length || !medForm.medicine_name) {
     ElMessage.warning("请完善必填项");
     return;
   }
-  const name = elders.value.find((e) => e.id === medForm.elder_id)?.name;
-  const row = await saveMedicationRecord({ ...medForm, elder_name: name });
-  meds.value.unshift(row);
-  ElMessage.success("已保存");
+  const missingRooms = [...new Set(
+    targetIds
+      .map((id) => elders.value.find((e) => e.id === id)?.room_no)
+      .filter((roomNo) => roomNo && !roomNurseTemplateMap.value[roomNo])
+  )];
+  if (missingRooms.length) {
+    ElMessage.warning(`以下房间未配置责任护理员：${missingRooms.join("、")}`);
+    return;
+  }
+  const roomSet = new Set(medForm.room_nos || []);
+  const rows = [];
+  for (const elderId of targetIds) {
+    const elder = elders.value.find((e) => e.id === elderId);
+    if (roomSet.size && !roomSet.has(elder?.room_no)) continue;
+    const assignedId = roomNurseTemplateMap.value[elder?.room_no] || null;
+    const assignee = nurseOptions.value.find((u) => Number(u.id) === Number(assignedId));
+    const payload = {
+      elder_id: elderId,
+      elder_name: elder?.name,
+      medicine_name: medForm.medicine_name,
+      dosage: medForm.dosage,
+      take_time: medForm.take_time,
+      remark: medForm.remark,
+      execute_user: assignedId,
+      execute_user_name: assignee?.real_name || assignee?.username || "",
+    };
+    // eslint-disable-next-line no-await-in-loop
+    rows.push(await saveMedicationRecord(payload));
+  }
+  meds.value = [...rows, ...meds.value];
+  ElMessage.success(`已保存 ${rows.length} 条用药记录`);
   medDlg.value = false;
 }
 
+async function saveRoomNurseTemplate() {
+  if (!templateForm.room_nos.length || !templateForm.nurse_id) {
+    ElMessage.warning("请选择房间和护理员");
+    return;
+  }
+  await batchSetRoomNurseTemplate({
+    room_nos: templateForm.room_nos,
+    nurse_id: templateForm.nurse_id,
+  });
+  const next = { ...roomNurseTemplateMap.value };
+  templateForm.room_nos.forEach((roomNo) => {
+    next[roomNo] = templateForm.nurse_id;
+  });
+  roomNurseTemplateMap.value = next;
+  ElMessage.success(`已为 ${templateForm.room_nos.length} 个房间设置责任护理员`);
+}
+
+async function clearRoomTemplate(roomNo) {
+  await deleteRoomNurseTemplate(roomNo);
+  const next = { ...roomNurseTemplateMap.value };
+  delete next[roomNo];
+  roomNurseTemplateMap.value = next;
+}
+
 onMounted(async () => {
-  const { list } = await getElderList({});
-  elders.value = list;
+  const [templateRes, elderRes, roomRes, userRes] = await Promise.all([
+    getRoomNurseTemplates(),
+    getElderList({}),
+    getRoomList({}),
+    getUsers(),
+  ]);
+  const map = {};
+  (templateRes.list || []).forEach((row) => {
+    if (row.room_no) map[row.room_no] = row.nurse_id;
+  });
+  roomNurseTemplateMap.value = map;
+  elders.value = elderRes.list || [];
+  rooms.value = roomRes.list || [];
+  nurseOptions.value = (userRes.list || []).filter((u) => {
+    const roles = Array.isArray(u.roles) ? u.roles : [];
+    return roles.includes("护理员") || roles.includes("护理主管");
+  });
   loadSigns();
   loadMeds();
 });
@@ -539,6 +817,15 @@ onMounted(async () => {
   border-radius: var(--staff-radius);
   overflow: hidden;
   box-shadow: var(--staff-card-shadow);
+}
+
+.room-template-card {
+  margin-bottom: 16px;
+}
+
+.template-title {
+  font-weight: 600;
+  margin-bottom: 12px;
 }
 
 .staff-toolbar {

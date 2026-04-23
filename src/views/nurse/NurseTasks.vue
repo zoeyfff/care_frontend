@@ -87,9 +87,11 @@
 
 <script setup>
 import { onMounted, reactive, ref } from "vue";
+import { useStore } from "vuex";
 import { ElMessage } from "element-plus";
-import { getNurseTasks, saveCareTask } from "@/api/staffApi";
+import { getNurseTasks, markNurseTaskDone } from "@/api/staffApi";
 
+const store = useStore();
 const status = ref("");
 const loading = ref(false);
 const list = ref([]);
@@ -109,7 +111,11 @@ const form = reactive({
 async function load() {
   loading.value = true;
   try {
-    const { list: rows } = await getNurseTasks({ status: status.value });
+    const nurseId = store.state.user?.id;
+    const { list: rows } = await getNurseTasks({
+      status: status.value,
+      nurse_id: nurseId,
+    });
     list.value = rows;
   } finally {
     loading.value = false;
@@ -129,9 +135,15 @@ function openEdit(row) {
 }
 
 async function submit() {
-  const payload = { ...form };
-  if (mode.value === "done") payload.status = 1;
-  await saveCareTask(payload);
+  if (mode.value === "done") {
+    await markNurseTaskDone(form.id, {
+      remark: form.remark,
+    });
+  } else {
+    ElMessage.info("护理端仅允许补充备注，请在工作人员端编辑任务主体。");
+    dlg.value = false;
+    return;
+  }
   ElMessage.success("已提交");
   dlg.value = false;
   load();

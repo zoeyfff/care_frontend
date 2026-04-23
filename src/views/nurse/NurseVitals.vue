@@ -1,11 +1,7 @@
 <template>
   <div>
     <h1 class="staff-page-title">体征录入</h1>
-    <p class="sub">
-      体征数据写入
-      <code>health_record</code
-      >。建议后端提供异常阈值与提醒规则（如体温≥37.3、血压过高等）。
-    </p>
+    
 
     <div class="staff-card">
       <div class="staff-toolbar">
@@ -82,8 +78,8 @@ import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import {
   getElderList,
-  getHealthRecords,
-  saveHealthRecord,
+  getNurseHealthRecords,
+  saveNurseHealthRecord,
 } from "@/api/staffApi";
 
 const loading = ref(false);
@@ -104,7 +100,6 @@ function isAbnormal(row) {
   if (!Number.isNaN(t) && (t >= 37.3 || t <= 35.0)) return true;
   const hr = Number(row.heart_rate);
   if (!Number.isNaN(hr) && (hr >= 110 || hr <= 50)) return true;
-  // 血压简单判断（演示）：收缩压≥160 或 舒张压≥100 视为异常
   if (row.blood_pressure && row.blood_pressure.includes("/")) {
     const [s, d] = row.blood_pressure.split("/").map((x) => Number(x));
     if ((s && s >= 160) || (d && d >= 100)) return true;
@@ -115,8 +110,10 @@ function isAbnormal(row) {
 async function load() {
   loading.value = true;
   try {
-    const { list: rows } = await getHealthRecords();
-    list.value = rows;
+    const { list: rows } = await getNurseHealthRecords();
+    list.value = rows || [];
+  } catch (e) {
+    console.error("加载体征记录失败", e);
   } finally {
     loading.value = false;
   }
@@ -139,7 +136,11 @@ async function save() {
     return;
   }
   const name = elders.value.find((e) => e.id === form.elder_id)?.name;
-  await saveHealthRecord({ ...form, elder_name: name });
+  await saveNurseHealthRecord({
+    ...form,
+    elder_name: name,
+    abnormal_flag: Number(form.temperature) >= 37.3 ? 1 : 0,
+  });
   ElMessage.success("已保存");
   dlg.value = false;
   load();
@@ -147,7 +148,7 @@ async function save() {
 
 onMounted(async () => {
   const { list: rows } = await getElderList();
-  elders.value = rows;
+  elders.value = rows || [];
   load();
 });
 </script>

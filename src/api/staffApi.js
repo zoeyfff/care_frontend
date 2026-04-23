@@ -96,10 +96,31 @@ export async function saveCareTask(payload) {
   return data;
 }
 
-export async function getHealthRecords() {
+export async function assignCareTask(id, payload) {
+  if (USE_MOCK) return { ok: true, id, ...payload };
+  const { data } = await request.patch(`/care-tasks/${id}/assign`, payload);
+  return data;
+}
+
+export async function executeCareTask(id, payload = {}) {
+  if (USE_MOCK) return { ok: true, id, status: 1, ...payload };
+  const { data } = await request.patch(`/care-tasks/${id}/execute`, payload);
+  return data;
+}
+
+export async function getTodayCareTasks(params = {}) {
+  if (USE_MOCK) {
+    const list = clone(mockCareTasks).filter((t) => Number(t.status || 0) === 0);
+    return { list, total: list.length };
+  }
+  const { data } = await request.get("/care-tasks/today", { params });
+  return data;
+}
+
+export async function getHealthRecords(params = {}) {
   if (USE_MOCK)
     return { list: clone(mockHealthRecords), total: mockHealthRecords.length };
-  const { data } = await request.get("/health-records");
+  const { data } = await request.get("/health-records", { params });
   return data;
 }
 
@@ -109,13 +130,13 @@ export async function saveHealthRecord(payload) {
   return data;
 }
 
-export async function getMedicationRecords() {
+export async function getMedicationRecords(params = {}) {
   if (USE_MOCK)
     return {
       list: clone(mockMedicationRecords),
       total: mockMedicationRecords.length,
     };
-  const { data } = await request.get("/medication-records");
+  const { data } = await request.get("/medication-records", { params });
   return data;
 }
 
@@ -303,7 +324,57 @@ export async function getPermissions() {
   return data;
 }
 
+// ==================== 房间责任护理员模板 ====================
+
+export async function batchSetRoomNurseTemplate(payload) {
+  if (USE_MOCK) {
+    return { ok: true, updated: (payload.room_nos || []).length };
+  }
+  const { data } = await request.post("/room-nurse-templates/batch", payload);
+  return data;
+}
+
+export async function getRoomNurseTemplates() {
+  if (USE_MOCK) return { list: [], total: 0 };
+  const { data } = await request.get("/room-nurse-templates");
+  return data;
+}
+
+export async function deleteRoomNurseTemplate(roomNo) {
+  if (USE_MOCK) return { ok: true };
+  const { data } = await request.delete(`/room-nurse-templates/${encodeURIComponent(roomNo)}`);
+  return data;
+}
+
+// ==================== 批量操作 ====================
+
+export async function batchAssignCareTasks(payload) {
+  if (USE_MOCK) {
+    return { ok: true, updated: (payload.task_ids || []).length };
+  }
+  const { data } = await request.patch("/care-tasks/batch-assign", payload);
+  return data;
+}
+
 // ==================== 护理端 API（与 /nurse 页面对应） ====================
+
+export async function getNurseHealthRecords(params = {}) {
+  if (USE_MOCK) {
+    let list = clone(mockHealthRecords);
+    if (params.elder_id !== undefined && params.elder_id !== null) {
+      list = list.filter((r) => r.elder_id === Number(params.elder_id));
+    }
+    return { list, total: list.length };
+  }
+  const { data } = await request.get("/nurse/health-records", { params });
+  return data;
+}
+
+export async function saveNurseHealthRecord(payload) {
+  if (USE_MOCK) return { id: Date.now(), ...payload };
+  const { data } = await request.post("/nurse/health-records", payload);
+  return data;
+}
 
 export async function getNurseDashboardStats() {
   if (USE_MOCK) {
@@ -339,6 +410,12 @@ export async function getNurseTasks(params = {}) {
   return data;
 }
 
+export async function markNurseTaskDone(id, payload = {}) {
+  if (USE_MOCK) return { ok: true, id, status: 1, ...payload };
+  const { data } = await request.patch(`/nurse/tasks/${id}/done`, payload);
+  return data;
+}
+
 export async function getNurseMedications(params = {}) {
   if (USE_MOCK) {
     let list = clone(mockMedicationRecords);
@@ -360,6 +437,34 @@ export async function getNurseMedications(params = {}) {
 export async function markMedicationDone(id) {
   if (USE_MOCK) return { ok: true };
   const { data } = await request.patch(`/nurse/medications/${id}/done`);
+  return data;
+}
+
+export async function confirmNurseMedication(id) {
+  if (USE_MOCK) return { ok: true, status: 2, id };
+  const { data } = await request.patch(`/nurse/medications/${id}/confirm`);
+  return data;
+}
+
+export async function rejectNurseMedication(id, reject_reason) {
+  if (USE_MOCK) return { ok: true, status: 3, id, reject_reason };
+  const { data } = await request.patch(`/nurse/medications/${id}/reject`, {
+    reject_reason,
+  });
+  return data;
+}
+
+export async function confirmMedication(id) {
+  if (USE_MOCK) return { ok: true, status: 2, id };
+  const { data } = await request.patch(`/medication-records/${id}/confirm`);
+  return data;
+}
+
+export async function rejectMedication(id, reject_reason) {
+  if (USE_MOCK) return { ok: true, status: 3, id, reject_reason };
+  const { data } = await request.patch(`/medication-records/${id}/reject`, {
+    reject_reason,
+  });
   return data;
 }
 
