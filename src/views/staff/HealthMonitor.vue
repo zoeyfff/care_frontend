@@ -44,7 +44,11 @@
         <el-table-column prop="nurse_name" label="责任护理员" min-width="140" />
         <el-table-column label="操作" width="90">
           <template #default="{ row }">
-            <el-button link type="danger" @click="clearRoomTemplate(row.room_no)">
+            <el-button
+              link
+              type="danger"
+              @click="clearRoomTemplate(row.room_no)"
+            >
               清除
             </el-button>
           </template>
@@ -430,23 +434,19 @@ const templateForm = reactive({
   nurse_id: null,
 });
 
-const eldersByRoom = computed(() => {
-  const room = {};
-  elders.value.forEach((e) => {
-    if (!room[e.room_no]) room[e.room_no] = [];
-    room[e.room_no].push(e);
-  });
-  return room;
-});
 const roomTemplateRows = computed(() => {
-  return Object.entries(roomNurseTemplateMap.value).map(([room_no, nurse_id]) => {
-    const nurse = nurseOptions.value.find((u) => Number(u.id) === Number(nurse_id));
-    return {
-      room_no,
-      nurse_id,
-      nurse_name: nurse?.real_name || nurse?.username || "未知护理员",
-    };
-  });
+  return Object.entries(roomNurseTemplateMap.value).map(
+    ([room_no, nurse_id]) => {
+      const nurse = nurseOptions.value.find(
+        (u) => Number(u.id) === Number(nurse_id)
+      );
+      return {
+        room_no,
+        nurse_id,
+        nurse_name: nurse?.real_name || nurse?.username || "未知护理员",
+      };
+    }
+  );
 });
 const signRoomElders = computed(() => {
   if (!signForm.room_nos.length) return elders.value;
@@ -673,17 +673,19 @@ async function saveSign() {
   const targetIds = signForm.elder_ids.length
     ? signForm.elder_ids
     : signForm.elder_id
-      ? [signForm.elder_id]
-      : [];
+    ? [signForm.elder_id]
+    : [];
   if (!targetIds.length) {
     ElMessage.warning("请选择长者（支持批量）");
     return;
   }
-  const missingRooms = [...new Set(
-    targetIds
-      .map((id) => elders.value.find((e) => e.id === id)?.room_no)
-      .filter((roomNo) => roomNo && !roomNurseTemplateMap.value[roomNo])
-  )];
+  const missingRooms = [
+    ...new Set(
+      targetIds
+        .map((id) => elders.value.find((e) => e.id === id)?.room_no)
+        .filter((roomNo) => roomNo && !roomNurseTemplateMap.value[roomNo])
+    ),
+  ];
   if (missingRooms.length) {
     ElMessage.warning(`以下房间未配置责任护理员：${missingRooms.join("、")}`);
     return;
@@ -694,7 +696,9 @@ async function saveSign() {
     const elder = elders.value.find((e) => e.id === elderId);
     if (roomSet.size && !roomSet.has(elder?.room_no)) continue;
     const assignedId = roomNurseTemplateMap.value[elder?.room_no] || null;
-    const assignee = nurseOptions.value.find((u) => Number(u.id) === Number(assignedId));
+    const assignee = nurseOptions.value.find(
+      (u) => Number(u.id) === Number(assignedId)
+    );
     const payload = {
       elder_id: elderId,
       elder_name: elder?.name,
@@ -718,17 +722,19 @@ async function saveMed() {
   const targetIds = medForm.elder_ids.length
     ? medForm.elder_ids
     : medForm.elder_id
-      ? [medForm.elder_id]
-      : [];
+    ? [medForm.elder_id]
+    : [];
   if (!targetIds.length || !medForm.medicine_name) {
     ElMessage.warning("请完善必填项");
     return;
   }
-  const missingRooms = [...new Set(
-    targetIds
-      .map((id) => elders.value.find((e) => e.id === id)?.room_no)
-      .filter((roomNo) => roomNo && !roomNurseTemplateMap.value[roomNo])
-  )];
+  const missingRooms = [
+    ...new Set(
+      targetIds
+        .map((id) => elders.value.find((e) => e.id === id)?.room_no)
+        .filter((roomNo) => roomNo && !roomNurseTemplateMap.value[roomNo])
+    ),
+  ];
   if (missingRooms.length) {
     ElMessage.warning(`以下房间未配置责任护理员：${missingRooms.join("、")}`);
     return;
@@ -739,7 +745,9 @@ async function saveMed() {
     const elder = elders.value.find((e) => e.id === elderId);
     if (roomSet.size && !roomSet.has(elder?.room_no)) continue;
     const assignedId = roomNurseTemplateMap.value[elder?.room_no] || null;
-    const assignee = nurseOptions.value.find((u) => Number(u.id) === Number(assignedId));
+    const assignee = nurseOptions.value.find(
+      (u) => Number(u.id) === Number(assignedId)
+    );
     const payload = {
       elder_id: elderId,
       elder_name: elder?.name,
@@ -772,7 +780,9 @@ async function saveRoomNurseTemplate() {
     next[roomNo] = templateForm.nurse_id;
   });
   roomNurseTemplateMap.value = next;
-  ElMessage.success(`已为 ${templateForm.room_nos.length} 个房间设置责任护理员`);
+  ElMessage.success(
+    `已为 ${templateForm.room_nos.length} 个房间设置责任护理员`
+  );
 }
 
 async function clearRoomTemplate(roomNo) {

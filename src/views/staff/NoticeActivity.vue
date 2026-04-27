@@ -5,7 +5,9 @@
     <el-tabs v-model="tab" type="border-card" class="staff-card tabs-wrap">
       <el-tab-pane label="公告通知" name="notice">
         <div class="staff-toolbar">
-          <el-button type="primary" @click="openNoticeDialog">发布公告</el-button>
+          <el-button type="primary" @click="openNoticeDialog"
+            >发布公告</el-button
+          >
           <el-button @click="loadNotices">刷新</el-button>
         </div>
         <el-timeline v-loading="loadingN">
@@ -16,7 +18,10 @@
             placement="top"
             type="primary"
           >
-            <div class="card-item notice-clickable" @click="openNoticeDetail(n)">
+            <div
+              class="card-item notice-clickable"
+              @click="openNoticeDetail(n)"
+            >
               <div class="item-head">
                 <span class="title">{{ n.title }}</span>
                 <el-tag size="small" effect="plain">{{ n.type }}</el-tag>
@@ -63,7 +68,11 @@
     >
       <el-form :model="noticeForm" label-width="90px">
         <el-form-item label="标题" required>
-          <el-input v-model="noticeForm.title" maxlength="100" show-word-limit />
+          <el-input
+            v-model="noticeForm.title"
+            maxlength="100"
+            show-word-limit
+          />
         </el-form-item>
         <el-form-item label="类型">
           <el-select v-model="noticeForm.type" style="width: 100%">
@@ -117,7 +126,11 @@
         <p class="detail-time">发布时间：{{ currentNotice.create_time }}</p>
         <p class="detail-content">{{ currentNotice.content }}</p>
         <div class="detail-section-title">附件下载</div>
-        <el-table :data="noticeFiles[currentNotice.id] || []" border size="small">
+        <el-table
+          :data="noticeFiles[currentNotice.id] || []"
+          border
+          size="small"
+        >
           <el-table-column
             prop="file_name"
             label="文件名"
@@ -125,13 +138,19 @@
             show-overflow-tooltip
           />
           <el-table-column label="大小" width="100">
-            <template #default="{ row }">{{ formatSize(row.file_size) }}</template>
+            <template #default="{ row }">{{
+              formatSize(row.file_size)
+            }}</template>
           </el-table-column>
           <el-table-column prop="uploader_name" label="上传人" width="110" />
           <el-table-column prop="create_time" label="上传时间" width="170" />
           <el-table-column label="操作" width="90" fixed="right">
             <template #default="{ row }">
-              <el-button link type="primary" @click="downloadFile(currentNotice, row)">
+              <el-button
+                link
+                type="primary"
+                @click="downloadFile(currentNotice, row)"
+              >
                 下载
               </el-button>
             </template>
@@ -212,10 +231,6 @@ async function loadActs() {
   } finally {
     loadingA.value = false;
   }
-}
-
-function noticeHint() {
-  ElMessage.info("请使用“发布公告”弹窗填写内容并可选上传附件。");
 }
 
 function actHint() {

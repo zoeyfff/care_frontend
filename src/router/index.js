@@ -77,6 +77,12 @@ const routes = [
         component: () => import("../views/staff/SystemRbac.vue"),
         meta: { title: "权限与用户" },
       },
+      {
+        path: "family-binding",
+        name: "staff-family-binding",
+        component: () => import("../views/staff/FamilyBinding.vue"),
+        meta: { title: "家属绑定" },
+      },
     ],
   },
   {
@@ -119,6 +125,43 @@ const routes = [
         name: "nurse-incidents",
         component: () => import("../views/nurse/NurseIncidents.vue"),
         meta: { title: "事件上报" },
+      },
+    ],
+  },
+  {
+    path: "/family",
+    component: () => import("../layouts/FamilyLayout.vue"),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: "dashboard",
+        name: "family-dashboard",
+        component: () => import("../views/family/FamilyDashboard.vue"),
+        meta: { title: "首页概览" },
+      },
+      {
+        path: "elder-info",
+        name: "family-elder-info",
+        component: () => import("../views/family/FamilyElderInfo.vue"),
+        meta: { title: "长者健康" },
+      },
+      {
+        path: "bills",
+        name: "family-bills",
+        component: () => import("../views/family/FamilyBill.vue"),
+        meta: { title: "我的账单" },
+      },
+      {
+        path: "feedback",
+        name: "family-feedback",
+        component: () => import("../views/family/FamilyFeedback.vue"),
+        meta: { title: "意见反馈" },
+      },
+      {
+        path: "activity",
+        name: "family-activity",
+        component: () => import("../views/family/FamilyActivity.vue"),
+        meta: { title: "公告与活动" },
       },
     ],
   },

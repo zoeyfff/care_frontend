@@ -74,6 +74,12 @@ export async function deleteElder(id) {
   return { ok: true };
 }
 
+export async function saveUser(payload) {
+  if (USE_MOCK) return { id: Date.now(), ...payload };
+  const { data } = await request.post("/users", payload);
+  return data;
+}
+
 export async function getCareTasks(params = {}) {
   if (USE_MOCK) {
     let list = clone(mockCareTasks);
@@ -110,7 +116,9 @@ export async function executeCareTask(id, payload = {}) {
 
 export async function getTodayCareTasks(params = {}) {
   if (USE_MOCK) {
-    const list = clone(mockCareTasks).filter((t) => Number(t.status || 0) === 0);
+    const list = clone(mockCareTasks).filter(
+      (t) => Number(t.status || 0) === 0
+    );
     return { list, total: list.length };
   }
   const { data } = await request.get("/care-tasks/today", { params });
@@ -153,9 +161,72 @@ export async function getCheckins() {
   return data;
 }
 
-export async function getBills() {
+export async function getBills(params = {}) {
   if (USE_MOCK) return { list: clone(mockBills), total: mockBills.length };
-  const { data } = await request.get("/bills");
+  const { data } = await request.get("/bills", { params });
+  return data;
+}
+
+export async function getBillDetail(id) {
+  if (USE_MOCK) return {};
+  const { data } = await request.get(`/bills/${id}`);
+  return data;
+}
+
+export async function generateBills(billingCycle) {
+  if (USE_MOCK) return { generated_count: 0 };
+  const { data } = await request.post("/bills/generate", null, { params: { billingCycle } });
+  return data;
+}
+
+export async function getBillStats(billingCycle) {
+  if (USE_MOCK) return { total_revenue: 0, total_unpaid: 0 };
+  const { data } = await request.get("/bills/stats", { params: { billing_cycle: billingCycle } });
+  return data;
+}
+
+export async function getBillMonthlyStats() {
+  if (USE_MOCK) return { list: [] };
+  const { data } = await request.get("/bills/monthly-stats");
+  return data;
+}
+
+export async function payBillByStaff(id, payMethod) {
+  if (USE_MOCK) return { id };
+  const { data } = await request.patch(`/bills/${id}/pay`, null, { params: { payMethod } });
+  return data;
+}
+
+export async function pushBillEmail(param) {
+  if (USE_MOCK) return { sent_count: 0, failed_count: 0 };
+  const params = typeof param === "number"
+    ? { bill_id: param }
+    : { billing_cycle: param };
+  const { data } = await request.post("/bills/push-email", null, { params });
+  return data;
+}
+
+export async function getExtraCharges(params = {}) {
+  if (USE_MOCK) return { list: [] };
+  const { data } = await request.get("/bills/extra-charges", { params });
+  return data;
+}
+
+export async function addExtraCharge(payload) {
+  if (USE_MOCK) return { id: Date.now() };
+  const { data } = await request.post("/bills/extra-charges", payload);
+  return data;
+}
+
+export async function deleteExtraCharge(id) {
+  if (USE_MOCK) return { ok: true };
+  await request.delete(`/bills/extra-charges/${id}`);
+  return { ok: true };
+}
+
+export async function getBillingStandards() {
+  if (USE_MOCK) return { care: [], room: [] };
+  const { data } = await request.get("/bills/standards");
   return data;
 }
 
@@ -236,13 +307,20 @@ export async function downloadNoticeFile(noticeId, fileId) {
   if (USE_MOCK) {
     return { blob: new Blob([]), filename: "mock-file.txt" };
   }
-  const res = await request.get(`/notices/${noticeId}/files/${fileId}/download`, {
-    responseType: "blob",
-  });
+  const res = await request.get(
+    `/notices/${noticeId}/files/${fileId}/download`,
+    {
+      responseType: "blob",
+    }
+  );
   const blob = res?.data instanceof Blob ? res.data : res;
   const disposition = res?.headers?.["content-disposition"] || "";
-  const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i);
-  const filename = decodeURIComponent(match?.[1] || match?.[2] || "download.bin");
+  const match = disposition.match(
+    /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i
+  );
+  const filename = decodeURIComponent(
+    match?.[1] || match?.[2] || "download.bin"
+  );
   return { blob, filename };
 }
 
@@ -342,7 +420,9 @@ export async function getRoomNurseTemplates() {
 
 export async function deleteRoomNurseTemplate(roomNo) {
   if (USE_MOCK) return { ok: true };
-  const { data } = await request.delete(`/room-nurse-templates/${encodeURIComponent(roomNo)}`);
+  const { data } = await request.delete(
+    `/room-nurse-templates/${encodeURIComponent(roomNo)}`
+  );
   return data;
 }
 
@@ -517,4 +597,105 @@ export async function deleteIncident(id) {
   if (USE_MOCK) return { ok: true };
   await request.delete(`/nurse/incidents/${id}`);
   return { ok: true };
+}
+
+// ==================== 家属端 API ====================
+
+export async function getMyLinkedElders() {
+  if (USE_MOCK) return { list: [], total: 0 };
+  const { data } = await request.get("/family/linked-elders");
+  return data;
+}
+
+export async function getElderHealthRecords(params = {}) {
+  if (USE_MOCK) return { list: [], total: 0 };
+  const { data } = await request.get("/family/elder-health-records", {
+    params,
+  });
+  return data;
+}
+
+export async function getLatestVitals(params = {}) {
+  if (USE_MOCK) return { list: [], total: 0 };
+  const { data } = await request.get("/family/latest-vitals", { params });
+  return data;
+}
+
+export async function getElderMedicationRecords(params = {}) {
+  if (USE_MOCK) return { list: [], total: 0 };
+  const { data } = await request.get("/family/elder-medication-records", {
+    params,
+  });
+  return data;
+}
+
+export async function getRecentNotices(params = {}) {
+  if (USE_MOCK) return { list: [], total: 0 };
+  const { data } = await request.get("/family/recent-notices", { params });
+  return data;
+}
+
+export async function getPublicNotices(params = {}) {
+  if (USE_MOCK) return { list: [], total: 0 };
+  const { data } = await request.get("/notices", { params });
+  return data;
+}
+
+export async function getMyBills(params = {}) {
+  if (USE_MOCK) return { list: [], total: 0 };
+  const { data } = await request.get("/family/bills", { params });
+  return data;
+}
+
+export async function getMyBillItems(params = {}) {
+  if (USE_MOCK) return { list: [], total: 0 };
+  const { data } = await request.get("/family/bill-items", { params });
+  return data;
+}
+
+export async function payBill(billId) {
+  if (USE_MOCK) return { ok: true, billId };
+  const { data } = await request.post(`/family/bills/${billId}/pay`);
+  return data;
+}
+
+export async function submitFamilyFeedback(payload) {
+  if (USE_MOCK) return { id: Date.now(), status: 0, ...payload };
+  const { data } = await request.post("/family/feedback", payload);
+  return data;
+}
+
+export async function getMyFeedbacks() {
+  if (USE_MOCK) return { list: [], total: 0 };
+  const { data } = await request.get("/family/feedbacks");
+  return data;
+}
+
+// ==================== 家属绑定管理（工作人员端） ====================
+
+export async function getFamilyUsers() {
+  if (USE_MOCK) return { list: [], total: 0 };
+  const { data } = await request.get("/family/family-users");
+  return data;
+}
+
+export async function getElderBinding(elderId) {
+  if (USE_MOCK) return null;
+  const { data } = await request.get(`/family/binding/${elderId}`);
+  return data;
+}
+
+export async function bindElderToFamily(payload) {
+  // payload: { elder_id, family_user_id, relation }
+  if (USE_MOCK) return { ok: true };
+  const { data } = await request.post("/family/bind", payload);
+  return data;
+}
+
+export async function unbindElder(elderId, familyUserId) {
+  if (USE_MOCK) return { ok: true };
+  const { data } = await request.delete("/family/unbind", {
+    params: { elder_id: elderId, family_user_id: familyUserId },
+  });
+  return data;
 }

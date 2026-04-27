@@ -1,7 +1,6 @@
 <template>
   <div>
     <h1 class="staff-page-title">体征录入</h1>
-    
 
     <div class="staff-card">
       <div class="staff-toolbar">

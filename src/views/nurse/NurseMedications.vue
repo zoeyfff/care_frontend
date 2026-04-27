@@ -1,7 +1,6 @@
 <template>
   <div>
     <h1 class="staff-page-title">用药执行</h1>
-   
 
     <div class="staff-card">
       <div class="staff-toolbar">
@@ -35,7 +34,9 @@
         </el-table-column>
         <el-table-column label="确认要求" width="90">
           <template #default="{ row }">
-            <el-tag :type="Number(row.need_confirm || 0) === 1 ? 'warning' : 'info'">
+            <el-tag
+              :type="Number(row.need_confirm || 0) === 1 ? 'warning' : 'info'"
+            >
               {{ Number(row.need_confirm || 0) === 1 ? "需确认" : "免确认" }}
             </el-tag>
           </template>
@@ -63,7 +64,9 @@
               标记已执行
             </el-button>
             <el-button
-              v-if="Number(row.status) === 1 && Number(row.need_confirm || 0) === 1"
+              v-if="
+                Number(row.status) === 1 && Number(row.need_confirm || 0) === 1
+              "
               link
               type="success"
               @click="confirm(row)"
@@ -71,7 +74,9 @@
               确认
             </el-button>
             <el-button
-              v-if="Number(row.status) === 1 && Number(row.need_confirm || 0) === 1"
+              v-if="
+                Number(row.status) === 1 && Number(row.need_confirm || 0) === 1
+              "
               link
               type="danger"
               @click="openReject(row)"
@@ -83,7 +88,12 @@
       </el-table>
     </div>
 
-    <el-dialog v-model="rejectDlg" title="拒绝执行" width="420px" destroy-on-close>
+    <el-dialog
+      v-model="rejectDlg"
+      title="拒绝执行"
+      width="420px"
+      destroy-on-close
+    >
       <el-form label-width="90px">
         <el-form-item label="药品">
           <el-input :model-value="rejectForm.medicine_name" disabled />

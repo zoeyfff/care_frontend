@@ -9,8 +9,12 @@ const ROLE_CODES_KEY = "staff_role_codes";
 
 function normalizeRoleCodes(roleCodes, permissions = []) {
   if (Array.isArray(roleCodes) && roleCodes.length) return roleCodes;
-  if (permissions.some((p) => String(p).toUpperCase().startsWith("NURSE:"))) {
+  // 兼容旧数据：从 permissions 中检测角色
+  if (permissions.some((p) => String(p).toUpperCase().includes("NURSE"))) {
     return ["NURSE"];
+  }
+  if (permissions.some((p) => String(p).toUpperCase().includes("FAMILY"))) {
+    return ["FAMILY"];
   }
   return ["ADMIN"];
 }
@@ -25,7 +29,10 @@ function resolveHomePath(roleCodes = [], permissions = []) {
 }
 
 function resolvePortalByHomePath(path) {
-  return String(path || "").startsWith("/nurse") ? "nurse" : "staff";
+  const p = String(path || "").toLowerCase();
+  if (p.startsWith("/nurse")) return "nurse";
+  if (p.startsWith("/family")) return "family";
+  return "staff";
 }
 
 export default createStore({

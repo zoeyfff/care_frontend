@@ -104,9 +104,9 @@
       </div>
 
       <!-- 任务表格 -->
-      <el-table 
-        :data="list" 
-        stripe 
+      <el-table
+        :data="list"
+        stripe
         v-loading="loading"
         class="task-table"
         :row-class-name="tableRowClassName"
@@ -116,12 +116,14 @@
         <el-table-column prop="elder_name" label="长者" width="110">
           <template #default="{ row }">
             <div class="elder-cell">
-              <span class="elder-avatar">{{ row.elder_name?.charAt(0) || '长' }}</span>
+              <span class="elder-avatar">{{
+                row.elder_name?.charAt(0) || "长"
+              }}</span>
               <span class="elder-name">{{ row.elder_name }}</span>
             </div>
           </template>
         </el-table-column>
-        
+
         <el-table-column prop="task_name" label="服务内容" min-width="220">
           <template #default="{ row }">
             <div class="task-name-cell">
@@ -132,7 +134,9 @@
         </el-table-column>
         <el-table-column label="频率" width="100">
           <template #default="{ row }">
-            <el-tag size="small" effect="plain">{{ frequencyLabel(row.frequency_type) }}</el-tag>
+            <el-tag size="small" effect="plain">{{
+              frequencyLabel(row.frequency_type)
+            }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="执行人" width="120">
@@ -147,41 +151,59 @@
             </el-tag>
           </template>
         </el-table-column>
-        
+
         <el-table-column prop="execute_time" label="计划执行时间" width="180">
           <template #default="{ row }">
-            <div class="time-cell" :class="{ 'is-today': isToday(row.execute_time) }">
-              <el-icon v-if="isToday(row.execute_time)" class="today-icon"><Calendar /></el-icon>
+            <div
+              class="time-cell"
+              :class="{ 'is-today': isToday(row.execute_time) }"
+            >
+              <el-icon v-if="isToday(row.execute_time)" class="today-icon"
+                ><Calendar
+              /></el-icon>
               {{ formatDateTime(row.execute_time) }}
-              <el-tag v-if="isToday(row.execute_time)" type="danger" size="small" class="today-tag">
+              <el-tag
+                v-if="isToday(row.execute_time)"
+                type="danger"
+                size="small"
+                class="today-tag"
+              >
                 今日
               </el-tag>
             </div>
           </template>
         </el-table-column>
-        
+
         <el-table-column label="状态" width="110" align="center">
           <template #default="{ row }">
-            <el-tag 
-              :type="row.status === 1 ? 'success' : 'warning'" 
+            <el-tag
+              :type="row.status === 1 ? 'success' : 'warning'"
               effect="light"
               size="large"
               class="status-tag"
             >
-              <span class="status-dot" :class="row.status === 1 ? 'completed' : 'pending'"></span>
+              <span
+                class="status-dot"
+                :class="row.status === 1 ? 'completed' : 'pending'"
+              ></span>
               {{ row.status === 1 ? "已完成" : "未完成" }}
             </el-tag>
           </template>
         </el-table-column>
-        
-        <el-table-column prop="remark" label="备注" min-width="200" show-overflow-tooltip>
+
+        <el-table-column
+          prop="remark"
+          label="备注"
+          min-width="200"
+          show-overflow-tooltip
+        >
           <template #default="{ row }">
             <span class="remark-text" :class="{ 'has-remark': row.remark }">
-              {{ row.remark || '暂无备注' }}
+              {{ row.remark || "暂无备注" }}
             </span>
           </template>
         </el-table-column>
-        
+
         <el-table-column label="操作" width="200" fixed="right" align="center">
           <template #default="{ row }">
             <div class="action-buttons">
@@ -195,9 +217,9 @@
                 <el-icon><CircleCheck /></el-icon>
                 完成
               </el-button>
-              <el-button 
-                link 
-                type="primary" 
+              <el-button
+                link
+                type="primary"
                 @click="openTask(row)"
                 class="edit-btn"
               >
@@ -211,7 +233,7 @@
           </template>
         </el-table-column>
       </el-table>
-      
+
       <!-- 空状态 -->
       <div v-if="!loading && list.length === 0" class="empty-state">
         <el-empty description="暂无护理任务，点击「新建任务」开始添加">
@@ -305,7 +327,12 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="执行人员">
-          <el-select v-model="taskForm.assigned_to" clearable filterable style="width: 100%">
+          <el-select
+            v-model="taskForm.assigned_to"
+            clearable
+            filterable
+            style="width: 100%"
+          >
             <el-option
               v-for="u in nurseOptions"
               :key="u.id"
@@ -318,10 +345,10 @@
           <el-input v-model="taskForm.instruction" type="textarea" :rows="2" />
         </el-form-item>
         <el-form-item label="备注">
-          <el-input 
-            v-model="taskForm.remark" 
-            type="textarea" 
-            :rows="3" 
+          <el-input
+            v-model="taskForm.remark"
+            type="textarea"
+            :rows="3"
             placeholder="可填写体征数据、注意事项等"
           />
         </el-form-item>
@@ -332,13 +359,22 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="assignDlg" title="任务分配" width="420px" destroy-on-close>
+    <el-dialog
+      v-model="assignDlg"
+      title="任务分配"
+      width="420px"
+      destroy-on-close
+    >
       <el-form label-width="90px">
         <el-form-item label="任务名称">
           <el-input :model-value="assignForm.task_name" disabled />
         </el-form-item>
         <el-form-item label="执行人" required>
-          <el-select v-model="assignForm.assigned_to" filterable style="width: 100%">
+          <el-select
+            v-model="assignForm.assigned_to"
+            filterable
+            style="width: 100%"
+          >
             <el-option
               v-for="u in nurseOptions"
               :key="u.id"
@@ -354,7 +390,12 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="batchAssignDlg" title="批量分配任务" width="420px" destroy-on-close>
+    <el-dialog
+      v-model="batchAssignDlg"
+      title="批量分配任务"
+      width="420px"
+      destroy-on-close
+    >
       <el-form label-width="90px">
         <el-form-item label="已选任务">
           <el-input :model-value="`${selectedTaskIds.length} 条`" disabled />
@@ -372,7 +413,9 @@
       </el-form>
       <template #footer>
         <el-button @click="batchAssignDlg = false">取消</el-button>
-        <el-button type="primary" @click="submitBatchAssign">确认分配</el-button>
+        <el-button type="primary" @click="submitBatchAssign"
+          >确认分配</el-button
+        >
       </template>
     </el-dialog>
   </div>
@@ -381,7 +424,13 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { Refresh, Plus, CircleCheck, Edit, Calendar } from '@element-plus/icons-vue';
+import {
+  Refresh,
+  Plus,
+  CircleCheck,
+  Edit,
+  Calendar,
+} from "@element-plus/icons-vue";
 import {
   getCareTasks,
   saveCareTask,
@@ -431,18 +480,18 @@ const assignForm = reactive({
 // 计算属性
 const todayTasks = computed(() => {
   const today = new Date().toDateString();
-  return list.value.filter(task => {
+  return list.value.filter((task) => {
     if (!task.execute_time) return false;
     return new Date(task.execute_time).toDateString() === today;
   });
 });
 
 const pendingTasksCount = computed(() => {
-  return list.value.filter(task => task.status === 0).length;
+  return list.value.filter((task) => task.status === 0).length;
 });
 
 const completedTasksCount = computed(() => {
-  return list.value.filter(task => task.status === 1).length;
+  return list.value.filter((task) => task.status === 1).length;
 });
 
 // 判断是否为今日任务
@@ -455,27 +504,27 @@ function isToday(dateStr) {
 
 // 格式化日期时间
 function formatDateTime(dateStr) {
-  if (!dateStr) return '未设置';
+  if (!dateStr) return "未设置";
   const date = new Date(dateStr);
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
   return `${month}-${day} ${hours}:${minutes}`;
 }
 
 // 获取优先级样式
 function getPriorityClass(row) {
-  if (!row.execute_time) return 'priority-normal';
+  if (!row.execute_time) return "priority-normal";
   const taskTime = new Date(row.execute_time);
   const now = new Date();
   const diffHours = (taskTime - now) / (1000 * 60 * 60);
-  
-  if (row.status === 1) return 'priority-completed';
-  if (diffHours < 0) return 'priority-overdue';
-  if (diffHours < 2) return 'priority-urgent';
-  if (diffHours < 6) return 'priority-soon';
-  return 'priority-normal';
+
+  if (row.status === 1) return "priority-completed";
+  if (diffHours < 0) return "priority-overdue";
+  if (diffHours < 2) return "priority-urgent";
+  if (diffHours < 6) return "priority-soon";
+  return "priority-normal";
 }
 
 function frequencyLabel(v) {
@@ -490,22 +539,22 @@ function frequencyLabel(v) {
 }
 
 function priorityLabel(v) {
-  return ({ 1: "普通", 2: "重要", 3: "紧急" }[Number(v)] || "普通");
+  return { 1: "普通", 2: "重要", 3: "紧急" }[Number(v)] || "普通";
 }
 
 function priorityTagType(v) {
-  return ({ 1: "info", 2: "warning", 3: "danger" }[Number(v)] || "info");
+  return { 1: "info", 2: "warning", 3: "danger" }[Number(v)] || "info";
 }
 
 // 表格行样式
 function tableRowClassName({ row }) {
-  if (row.status === 1) return 'completed-row';
-  if (!row.execute_time) return '';
+  if (row.status === 1) return "completed-row";
+  if (!row.execute_time) return "";
   const taskTime = new Date(row.execute_time);
   const now = new Date();
-  if (taskTime < now && row.status === 0) return 'overdue-row';
-  if (isToday(row.execute_time)) return 'today-row';
-  return '';
+  if (taskTime < now && row.status === 0) return "overdue-row";
+  if (isToday(row.execute_time)) return "today-row";
+  return "";
 }
 
 async function load() {
@@ -586,7 +635,8 @@ async function saveTask() {
   const name =
     elderOptions.value.find((e) => e.id === taskForm.elder_id)?.name || "";
   const assignee =
-    nurseOptions.value.find((u) => u.id === taskForm.assigned_to)?.real_name || "";
+    nurseOptions.value.find((u) => u.id === taskForm.assigned_to)?.real_name ||
+    "";
   const saved = await saveCareTask({
     ...taskForm,
     elder_name: name,
@@ -631,7 +681,9 @@ async function submitAssign() {
     ElMessage.warning("请选择执行人");
     return;
   }
-  const assignee = nurseOptions.value.find((u) => u.id === assignForm.assigned_to);
+  const assignee = nurseOptions.value.find(
+    (u) => u.id === assignForm.assigned_to
+  );
   await assignCareTask(assignForm.id, {
     assigned_to: assignForm.assigned_to,
     assigned_to_name: assignee?.real_name || assignee?.username || "",
@@ -687,7 +739,7 @@ onMounted(async () => {
     font-weight: 700;
     color: var(--staff-text);
   }
-  
+
   .sub-title {
     margin: 0;
     font-size: 14px;
@@ -711,20 +763,20 @@ onMounted(async () => {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
   min-width: 140px;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   }
-  
+
   &.today {
     border-left: 4px solid #0d9488;
   }
-  
+
   &.pending {
     border-left: 4px solid #f59e0b;
   }
-  
+
   &.completed {
     border-left: 4px solid #10b981;
   }
@@ -802,7 +854,7 @@ onMounted(async () => {
 .task-table {
   border-radius: 12px;
   overflow: hidden;
-  
+
   :deep(.el-table__header) {
     th {
       background: #f8fafc;
@@ -810,31 +862,31 @@ onMounted(async () => {
       color: #1e293b;
     }
   }
-  
+
   :deep(.el-table__body) {
     tr {
       transition: background 0.2s ease;
     }
-    
+
     tr.today-row {
       background: linear-gradient(90deg, #fef3c7 0%, #fffbeb 100%);
-      
+
       &:hover > td {
         background: #fef3c7 !important;
       }
     }
-    
+
     tr.overdue-row {
       background: #fef2f2;
-      
+
       &:hover > td {
         background: #fee2e2 !important;
       }
     }
-    
+
     tr.completed-row {
       opacity: 0.75;
-      
+
       td {
         color: #94a3b8;
       }
@@ -880,32 +932,33 @@ onMounted(async () => {
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
-  
+
   &.priority-overdue {
     background: #ef4444;
     box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
   }
-  
+
   &.priority-urgent {
     background: #f59e0b;
     animation: pulse 1.5s infinite;
   }
-  
+
   &.priority-soon {
     background: #eab308;
   }
-  
+
   &.priority-normal {
     background: #3b82f6;
   }
-  
+
   &.priority-completed {
     background: #94a3b8;
   }
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -922,7 +975,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 6px;
-  
+
   &.is-today {
     color: #ef4444;
     font-weight: 500;
@@ -954,12 +1007,12 @@ onMounted(async () => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  
+
   &.pending {
     background: #f59e0b;
     animation: pulse 1.5s infinite;
   }
-  
+
   &.completed {
     background: #10b981;
   }
@@ -968,7 +1021,7 @@ onMounted(async () => {
 // 备注文本
 .remark-text {
   color: var(--staff-muted);
-  
+
   &.has-remark {
     color: var(--staff-text);
   }
@@ -990,7 +1043,7 @@ onMounted(async () => {
   padding: 4px 12px;
   font-weight: 500;
   transition: all 0.2s ease;
-  
+
   &:hover {
     transform: scale(1.05);
   }
@@ -998,7 +1051,7 @@ onMounted(async () => {
 
 .complete-btn {
   color: #10b981 !important;
-  
+
   &:hover {
     background: #ecfdf5 !important;
   }
@@ -1006,7 +1059,7 @@ onMounted(async () => {
 
 .edit-btn {
   color: #3b82f6 !important;
-  
+
   &:hover {
     background: #eff6ff !important;
   }
@@ -1023,27 +1076,27 @@ onMounted(async () => {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .stats-cards {
     flex-wrap: wrap;
   }
-  
+
   .stat-card {
     flex: 1;
     min-width: 100px;
     padding: 12px 16px;
   }
-  
+
   .stat-value {
     font-size: 24px;
   }
-  
+
   .enhanced-toolbar {
     flex-direction: column;
     gap: 12px;
     align-items: stretch;
   }
-  
+
   .toolbar-left,
   .toolbar-right {
     width: 100%;

@@ -2,8 +2,8 @@
   <el-container class="staff-layout">
     <el-aside :width="asideWidth" class="staff-aside">
       <div class="logo">
-        <span class="logo-mark">护</span>
-        <span v-show="!collapsed" class="logo-text">护理工作台</span>
+        <span class="logo-mark">眷</span>
+        <span v-show="!collapsed" class="logo-text">家属关怀平台</span>
       </div>
       <el-scrollbar>
         <el-menu
@@ -11,33 +11,29 @@
           :collapse="collapsed"
           :collapse-transition="false"
           router
-          background-color="#134e4a"
+          background-color="#7c3aed"
           text-color="rgba(255,255,255,0.85)"
-          active-text-color="#5eead4"
+          active-text-color="#c4b5fd"
         >
-          <el-menu-item index="/nurse/dashboard">
+          <el-menu-item index="/family/dashboard">
             <el-icon><Odometer /></el-icon>
-            <span>我的工作台</span>
+            <span>首页概览</span>
           </el-menu-item>
-          <el-menu-item index="/nurse/tasks">
-            <el-icon><List /></el-icon>
-            <span>我的任务</span>
+          <el-menu-item index="/family/elder-info">
+            <el-icon><User /></el-icon>
+            <span>长者健康</span>
           </el-menu-item>
-          <el-menu-item index="/nurse/vitals">
-            <el-icon><FirstAidKit /></el-icon>
-            <span>体征录入</span>
+          <el-menu-item index="/family/bills">
+            <el-icon><Wallet /></el-icon>
+            <span>我的账单</span>
           </el-menu-item>
-          <el-menu-item index="/nurse/medications">
-            <el-icon><Timer /></el-icon>
-            <span>用药执行</span>
+          <el-menu-item index="/family/feedback">
+            <el-icon><ChatDotRound /></el-icon>
+            <span>意见反馈</span>
           </el-menu-item>
-          <el-menu-item index="/nurse/handover">
-            <el-icon><Document /></el-icon>
-            <span>交接班</span>
-          </el-menu-item>
-          <el-menu-item index="/nurse/incidents">
-            <el-icon><Warning /></el-icon>
-            <span>事件上报</span>
+          <el-menu-item index="/family/activity">
+            <el-icon><Bell /></el-icon>
+            <span>公告与活动</span>
           </el-menu-item>
         </el-menu>
       </el-scrollbar>
@@ -54,7 +50,7 @@
             @click="toggle"
           />
           <el-breadcrumb separator="/">
-            <el-breadcrumb-item :to="{ path: '/nurse/dashboard' }">
+            <el-breadcrumb-item :to="{ path: '/family/dashboard' }">
               首页
             </el-breadcrumb-item>
             <el-breadcrumb-item v-if="route.meta.title">
@@ -63,8 +59,8 @@
           </el-breadcrumb>
         </div>
         <div class="header-right">
-          <el-tag type="warning" effect="plain" round size="small">
-            护理人员端
+          <el-tag type="info" effect="plain" round size="small">
+            家属端
           </el-tag>
           <el-dropdown trigger="click" @command="onUserCommand">
             <span class="user-trigger">
@@ -97,14 +93,13 @@ import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import {
   ArrowDown,
-  Document,
+  Bell,
+  ChatDotRound,
   Expand,
-  FirstAidKit,
   Fold,
-  List,
   Odometer,
-  Timer,
-  Warning,
+  User,
+  Wallet,
 } from "@element-plus/icons-vue";
 
 const route = useRoute();
@@ -117,7 +112,7 @@ const activeMenu = computed(() => route.path);
 const displayName = computed(() => store.getters.displayName);
 const avatarText = computed(() => {
   const n = displayName.value;
-  return n ? n.slice(0, 1) : "护";
+  return n ? n.slice(0, 1) : "家";
 });
 
 function toggle() {
@@ -143,7 +138,7 @@ async function onUserCommand(cmd) {
   display: flex;
   flex-direction: column;
   transition: width 0.2s ease;
-  box-shadow: 2px 0 12px rgba(19, 78, 74, 0.15);
+  box-shadow: 2px 0 12px rgba(124, 58, 237, 0.15);
 }
 
 .logo {
@@ -159,7 +154,7 @@ async function onUserCommand(cmd) {
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #2dd4bf, #0d9488);
+    background: linear-gradient(135deg, #a78bfa, #7c3aed);
     color: #fff;
     font-weight: 700;
     font-size: 18px;
@@ -181,7 +176,7 @@ async function onUserCommand(cmd) {
 }
 
 :deep(.el-menu-item.is-active) {
-  background: rgba(20, 184, 166, 0.18) !important;
+  background: rgba(139, 92, 246, 0.18) !important;
 }
 
 .staff-main-wrap {
@@ -196,7 +191,7 @@ async function onUserCommand(cmd) {
   justify-content: space-between;
   padding: 0 20px;
   background: #fff;
-  box-shadow: 0 1px 0 rgba(15, 118, 110, 0.06);
+  box-shadow: 0 1px 0 rgba(124, 58, 237, 0.06);
   z-index: 2;
 }
 
@@ -208,8 +203,8 @@ async function onUserCommand(cmd) {
 }
 
 .collapse-btn {
-  border-color: #99f6e4;
-  color: var(--staff-primary-dark);
+  border-color: #ddd6fe;
+  color: #7c3aed;
 }
 
 .header-right {
@@ -226,7 +221,7 @@ async function onUserCommand(cmd) {
   color: var(--staff-text);
 
   .avatar {
-    background: var(--staff-primary);
+    background: #7c3aed;
     color: #fff;
     font-size: 14px;
   }
