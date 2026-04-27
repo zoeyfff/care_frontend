@@ -472,7 +472,10 @@ import {
   addExtraCharge,
   deleteExtraCharge,
   getBillingStandards,
+  getCheckins,
+  getElderList,
 } from "@/api/staffApi";
+import store from "@/store";
 
 use([CanvasRenderer, BarChart, GridComponent, TooltipComponent, LegendComponent]);
 
@@ -559,8 +562,8 @@ const monthlyChartOption = computed(() => ({
 async function loadCheckins() {
   loadingC.value = true;
   try {
-    const r2 = await fetch("/api/checkins").then(r => r.json());
-    checkins.value = r2.data?.list || [];
+    const res = await getCheckins();
+    checkins.value = res?.list || [];
   } catch {
     checkins.value = [];
   } finally {
@@ -571,8 +574,8 @@ async function loadCheckins() {
 // ========== 长者选项（用于额外费用登记） ==========
 async function loadElderOptions() {
   try {
-    const r = await fetch("/api/elders").then(r => r.json());
-    elderOptions.value = r.data?.list || [];
+    const res = await getElderList();
+    elderOptions.value = res?.list || [];
   } catch {
     elderOptions.value = [];
   }
@@ -757,7 +760,11 @@ async function loadStandards() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // 等待 session 恢复完成（确保 token 已加载）
+  if (!store.state.user) {
+    await store.dispatch("restoreSession");
+  }
   loadCheckins();
   loadBills();
   loadExtraCharges();
