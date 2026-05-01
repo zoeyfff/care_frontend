@@ -11,7 +11,6 @@
         </div>
         <el-table :data="checkins" stripe border v-loading="loadingC" max-height="420">
           <el-table-column prop="elder_name" label="长者姓名" width="110" />
-          <el-table-column prop="room_no" label="房间号" width="100" />
           <el-table-column prop="start_date" label="入住开始" width="120" />
           <el-table-column label="结束日期" width="120">
             <template #default="{ row }">{{ row.end_date || "—" }}</template>
