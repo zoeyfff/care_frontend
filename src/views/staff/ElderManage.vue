@@ -57,6 +57,17 @@
         </el-col>
         <el-col :xs="12" :sm="6">
           <div class="summary-card">
+            <div class="summary-icon" style="background: #e0e7ff">
+              <el-icon style="color: #4f46e5"><User /></el-icon>
+            </div>
+            <div class="summary-info">
+              <div class="summary-value">{{ stats.discharged }}</div>
+              <div class="summary-label">已出院</div>
+            </div>
+          </div>
+        </el-col>
+        <el-col :xs="12" :sm="6">
+          <div class="summary-card">
             <div class="summary-icon" style="background: #fef3c7">
               <el-icon style="color: #d97706"><HomeFilled /></el-icon>
             </div>
@@ -77,6 +88,13 @@
           <el-radio-button label="一级护理">一级护理</el-radio-button>
           <el-radio-button label="二级护理">二级护理</el-radio-button>
           <el-radio-button label="三级护理">三级护理</el-radio-button>
+        </el-radio-group>
+        <el-divider direction="vertical" />
+        <span class="filter-label">状态：</span>
+        <el-radio-group v-model="filterStatus" size="small" @change="load">
+          <el-radio-button label="">全部</el-radio-button>
+          <el-radio-button label="living">在院</el-radio-button>
+          <el-radio-button label="discharged">已出院</el-radio-button>
         </el-radio-group>
       </div>
 
@@ -135,6 +153,12 @@
           </template>
         </el-table-column>
         <el-table-column prop="checkin_date" label="入住日期" width="110" align="center" />
+        <el-table-column label="状态" width="80" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.status === '已出院'" type="info" size="small">已出院</el-tag>
+            <el-tag v-else type="success" size="small">在院</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column
           prop="health_info"
           label="健康概况"
@@ -156,6 +180,15 @@
                 </el-button>
               </template>
             </el-popconfirm>
+            <el-button
+              v-if="row.status !== '已出院'"
+              link
+              type="warning"
+              size="small"
+              @click="openCheckout(row)"
+            >
+              <el-icon><ArrowRight /></el-icon> 出院
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -265,6 +298,62 @@
       </template>
     </el-dialog>
 
+    <!-- 出院弹窗 -->
+    <el-dialog
+      v-model="checkoutDlg"
+      title="办理出院"
+      width="520px"
+      destroy-on-close
+      :close-on-click-modal="false"
+    >
+      <div v-if="checkoutTarget" class="checkout-info">
+        <el-avatar :size="40" style="background: #7c3aed; font-size: 16px">
+          {{ checkoutTarget.name?.slice(0, 1) }}
+        </el-avatar>
+        <div>
+          <div class="checkout-name">{{ checkoutTarget.name }}</div>
+          <div class="checkout-meta">
+            {{ checkoutTarget.gender }} · {{ checkoutTarget.room_no || "—" }}室 · {{ checkoutTarget.bed_no || "—" }}
+          </div>
+        </div>
+      </div>
+      <el-form ref="checkoutFormRef" :model="checkoutForm" :rules="checkoutRules" label-width="100px" style="margin-top: 16px">
+        <el-form-item label="出院日期" prop="checkout_date">
+          <el-date-picker
+            v-model="checkoutForm.checkout_date"
+            type="date"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+            placeholder="选择出院日期"
+          />
+        </el-form-item>
+        <el-form-item label="出院原因" prop="checkout_reason">
+          <el-select v-model="checkoutForm.checkout_reason" placeholder="请选择" style="width: 100%">
+            <el-option label="康复离院" value="康复离院" />
+            <el-option label="转院治疗" value="转院治疗" />
+            <el-option label="家属接回" value="家属接回" />
+            <el-option label="其他" value="其他" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input
+            v-model="checkoutForm.checkout_remark"
+            type="textarea"
+            :rows="3"
+            placeholder="可填写后续护理交代、注意事项等"
+            maxlength="300"
+            show-word-limit
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="checkoutDlg = false">取消</el-button>
+        <el-button type="primary" :loading="checkoutLoading" @click="confirmCheckout">
+          确认出院
+        </el-button>
+      </template>
+    </el-dialog>
+
     <!-- 长者详情抽屉 -->
     <el-drawer v-model="detailDrawer" title="长者档案详情" size="520px" destroy-on-close>
       <div v-if="currentRow" class="detail-root">
@@ -290,6 +379,19 @@
           <el-descriptions-item label="房间号">{{ currentRow.room_no || "—" }}</el-descriptions-item>
           <el-descriptions-item label="床位号">{{ currentRow.bed_no || "—" }}</el-descriptions-item>
           <el-descriptions-item label="建档时间" :span="2">{{ currentRow.create_time || "—" }}</el-descriptions-item>
+          <el-descriptions-item label="状态" :span="2">
+            <el-tag v-if="currentRow.status === '已出院'" type="info" size="small">已出院</el-tag>
+            <el-tag v-else type="success" size="small">在院</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item v-if="currentRow.status === '已出院'" label="出院日期" :span="2">
+            {{ currentRow.checkout_date || "—" }}
+          </el-descriptions-item>
+          <el-descriptions-item v-if="currentRow.status === '已出院'" label="出院原因" :span="2">
+            {{ currentRow.checkout_reason || "—" }}
+          </el-descriptions-item>
+          <el-descriptions-item v-if="currentRow.checkout_remark" label="出院备注" :span="2">
+            <span style="white-space: pre-wrap">{{ currentRow.checkout_remark }}</span>
+          </el-descriptions-item>
           <el-descriptions-item label="家属联系方式" :span="2">{{ currentRow.family_contact || "—" }}</el-descriptions-item>
           <el-descriptions-item label="健康概况" :span="2">
             <span style="white-space: pre-wrap">{{ currentRow.health_info || "暂无" }}</span>
@@ -314,12 +416,13 @@ import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import {
   Plus, Download, User, CircleCheck, Warning, HomeFilled,
-  Edit, View, Delete,
+  Edit, View, Delete, ArrowRight,
 } from "@element-plus/icons-vue";
-import { getElderList, saveElder, deleteElder } from "@/api/staffApi";
+import { getElderList, saveElder, deleteElder, checkoutElder } from "@/api/staffApi";
 
 const keyword = ref("");
 const filterCareLevel = ref("");
+const filterStatus = ref("");
 const loading = ref(false);
 const exporting = ref(false);
 const saving = ref(false);
@@ -328,6 +431,19 @@ const visible = ref(false);
 const detailDrawer = ref(false);
 const currentRow = ref(null);
 const formRef = ref();
+const checkoutFormRef = ref();
+const checkoutTarget = ref(null);
+const checkoutDlg = ref(false);
+const checkoutLoading = ref(false);
+const checkoutForm = reactive({
+  checkout_date: "",
+  checkout_reason: "",
+  checkout_remark: "",
+});
+const checkoutRules = {
+  checkout_date: [{ required: true, message: "请选择出院日期", trigger: "change" }],
+  checkout_reason: [{ required: true, message: "请选择出院原因", trigger: "change" }],
+};
 
 const form = reactive({
   id: null,
@@ -362,8 +478,9 @@ const stats = computed(() => {
   const rooms = new Set(all.map((e) => e.room_no).filter(Boolean)).size;
   return {
     total: all.length,
-    living: all.length,
+    living: all.filter((e) => e.status !== "已出院").length,
     special: all.filter((e) => e.care_level === "特级护理").length,
+    discharged: all.filter((e) => e.status === "已出院").length,
     rooms,
   };
 });
@@ -380,9 +497,16 @@ async function load() {
   loading.value = true;
   try {
     const { list } = await getElderList({ keyword: keyword.value });
-    tableData.value = filterCareLevel.value
-      ? list.filter((e) => e.care_level === filterCareLevel.value)
-      : list;
+    let data = list || [];
+    if (filterCareLevel.value) {
+      data = data.filter((e) => e.care_level === filterCareLevel.value);
+    }
+    if (filterStatus.value === "living") {
+      data = data.filter((e) => e.status !== "已出院");
+    } else if (filterStatus.value === "discharged") {
+      data = data.filter((e) => e.status === "已出院");
+    }
+    tableData.value = data;
   } finally {
     loading.value = false;
   }
@@ -432,6 +556,36 @@ async function remove(row) {
   await deleteElder(row.id);
   tableData.value = tableData.value.filter((x) => x.id !== row.id);
   ElMessage.success("已删除");
+}
+
+function openCheckout(row) {
+  checkoutTarget.value = row;
+  checkoutForm.checkout_date = new Date().toISOString().slice(0, 10);
+  checkoutForm.checkout_reason = "";
+  checkoutForm.checkout_remark = "";
+  checkoutDlg.value = true;
+}
+
+async function confirmCheckout() {
+  try {
+    await checkoutFormRef.value?.validate();
+  } catch {
+    return;
+  }
+  checkoutLoading.value = true;
+  try {
+    const result = await checkoutElder(checkoutTarget.value.id, { ...checkoutForm });
+    const i = tableData.value.findIndex((x) => x.id === checkoutTarget.value.id);
+    if (i >= 0) {
+      tableData.value[i] = { ...tableData.value[i], ...result };
+    }
+    ElMessage.success("出院手续已办理");
+    checkoutDlg.value = false;
+  } catch (e) {
+    ElMessage.error("办理失败：" + (e?.message || "未知错误"));
+  } finally {
+    checkoutLoading.value = false;
+  }
 }
 
 function exportToExcel(data, filename, title) {
@@ -641,4 +795,28 @@ onMounted(load);
   border-top: 1px solid var(--el-border-color-lighter);
   text-align: right;
 }
+
+// 出院弹窗
+.checkout-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid var(--el-border-color-lighter);
+}
+
+.checkout-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--staff-text);
+  margin-bottom: 4px;
+}
+
+.checkout-meta {
+  font-size: 13px;
+  color: var(--staff-muted);
+}
+
 </style>

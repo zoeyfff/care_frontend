@@ -74,6 +74,20 @@ export async function deleteElder(id) {
   return { ok: true };
 }
 
+export async function checkoutElder(id, payload = {}) {
+  if (USE_MOCK) {
+    return {
+      id,
+      checkout_date: payload.checkout_date || new Date().toISOString().slice(0, 10),
+      checkout_reason: payload.checkout_reason || "",
+      checkout_remark: payload.checkout_remark || "",
+      status: "已出院",
+    };
+  }
+  const { data } = await request.post(`/elders/${id}/checkout`, payload);
+  return data;
+}
+
 export async function saveUser(payload) {
   if (USE_MOCK) return { id: Date.now(), ...payload };
   const { data } = await request.post("/users", payload);
@@ -280,6 +294,13 @@ export async function getNoticeDetail(noticeId) {
 
 export async function uploadNoticeFile(noticeId, file, onProgress) {
   if (USE_MOCK) {
+    // Simulate upload progress
+    if (onProgress) {
+      for (let i = 0; i <= 100; i += 20) {
+        await new Promise((r) => setTimeout(r, 80));
+        onProgress(i);
+      }
+    }
     const now = new Date().toISOString().slice(0, 19).replace("T", " ");
     return {
       id: Date.now(),
@@ -334,6 +355,20 @@ export async function getActivities() {
   if (USE_MOCK)
     return { list: clone(mockActivities), total: mockActivities.length };
   const { data } = await request.get("/activities");
+  return data;
+}
+
+export async function createActivity(payload) {
+  if (USE_MOCK) {
+    return {
+      id: Date.now(),
+      ...payload,
+      signup_count: 0,
+      signups: [],
+      create_time: new Date().toISOString().slice(0, 19).replace("T", " "),
+    };
+  }
+  const { data } = await request.post("/activities", payload);
   return data;
 }
 

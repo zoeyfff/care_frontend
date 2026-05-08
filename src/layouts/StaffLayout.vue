@@ -47,10 +47,6 @@
             <el-icon><Bell /></el-icon>
             <span>公告与活动</span>
           </el-menu-item>
-          <el-menu-item index="/staff/system-rbac">
-            <el-icon><Key /></el-icon>
-            <span>权限与用户</span>
-          </el-menu-item>
           <el-menu-item index="/staff/family-binding">
             <el-icon><UserFilled /></el-icon>
             <span>家属绑定</span>
@@ -111,7 +107,7 @@
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
-import { Fold, Expand, ArrowDown, HomeFilled, Key, UserFilled } from "@element-plus/icons-vue";
+import { Fold, Expand, ArrowDown, HomeFilled, UserFilled } from "@element-plus/icons-vue";
 
 const route = useRoute();
 const router = useRouter();
