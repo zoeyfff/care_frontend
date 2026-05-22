@@ -177,16 +177,16 @@
         <el-table-column label="状态" width="110" align="center">
           <template #default="{ row }">
             <el-tag
-              :type="row.status === 1 ? 'success' : 'warning'"
+              :type="row.last_execute_time ? 'success' : 'warning'"
               effect="light"
               size="large"
               class="status-tag"
             >
               <span
                 class="status-dot"
-                :class="row.status === 1 ? 'completed' : 'pending'"
+                :class="row.last_execute_time ? 'completed' : 'pending'"
               ></span>
-              {{ row.status === 1 ? "已完成" : "未完成" }}
+              {{ row.last_execute_time ? "已完成" : "未完成" }}
             </el-tag>
           </template>
         </el-table-column>
@@ -208,7 +208,7 @@
           <template #default="{ row }">
             <div class="action-buttons">
               <el-button
-                v-if="row.status === 0"
+                v-if="!row.last_execute_time"
                 link
                 type="primary"
                 @click="complete(row)"
@@ -655,9 +655,15 @@ async function saveTask() {
 
 async function complete(row) {
   const remark = row.remark || "已完成";
-  await executeCareTask(row.id, { remark });
-  row.status = 1;
-  ElMessage.success("已标记完成");
+  const result = await executeCareTask(row.id, { remark });
+  // 循环任务完成后提示下一次执行时间
+  if (result && result.next_execute_time) {
+    ElMessage.success(`已标记完成，下次执行时间：${result.next_execute_time}`);
+  } else {
+    ElMessage.success("已标记完成");
+  }
+  // 重新加载列表，确保显示最新状态
+  await load();
 }
 
 function openAssign(row) {

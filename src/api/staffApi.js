@@ -494,15 +494,18 @@ export async function saveNurseHealthRecord(payload) {
 export async function getNurseDashboardStats() {
   if (USE_MOCK) {
     const taskTodo = mockCareTasks.filter((t) => t.status === 0).length;
+    const taskDone = mockCareTasks.filter((t) => t.status === 1).length;
     const medDue = mockMedicationRecords.filter((m) => m.status === 0).length;
+    const medDone = mockMedicationRecords.filter((m) => m.status === 1).length;
+    const vitalRecorded = mockHealthRecords.length;
     const vitalAbnormal = mockHealthRecords.filter((r) => {
       const t = Number(r.temperature);
       return !Number.isNaN(t) && t >= 37.3;
     }).length;
-    const handoverUnread = mockHandovers.filter(
-      (h) => h.read_status === 0
-    ).length;
-    return { taskTodo, medDue, vitalAbnormal, handoverUnread };
+    const handoverUnread = mockHandovers.filter((h) => h.read_status === 0).length;
+    const incidentPending = mockIncidents.filter((i) => i.status === 0).length;
+    const newCheckins = 1;
+    return { taskTodo, taskDone, medDue, medDone, vitalRecorded, vitalAbnormal, handoverUnread, incidentPending, newCheckins };
   }
   const { data } = await request.get("/nurse/dashboard/stats");
   return data;
@@ -637,7 +640,7 @@ export async function deleteIncident(id) {
 // ==================== 家属端 API ====================
 
 export async function getMyLinkedElders() {
-  if (USE_MOCK) return { list: [], total: 0 };
+  if (USE_MOCK) return { list: [{ id: 1, name: "王桂兰" }, { id: 2, name: "李建国" }], total: 2 };
   const { data } = await request.get("/family/linked-elders");
   return data;
 }
@@ -701,7 +704,7 @@ export async function submitFamilyFeedback(payload) {
 }
 
 export async function getMyFeedbacks() {
-  if (USE_MOCK) return { list: [], total: 0 };
+  if (USE_MOCK) return { list: clone(mockFeedbacks), total: mockFeedbacks.length };
   const { data } = await request.get("/family/feedbacks");
   return data;
 }
