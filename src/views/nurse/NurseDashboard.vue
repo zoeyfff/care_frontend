@@ -47,7 +47,7 @@
       <el-col :xs="12" :sm="8" :lg="4">
         <div class="stat-card stat-orange" @click="go('/nurse/medications')">
           <div class="stat-icon">
-            <el-icon>< MedicineBox /></el-icon>
+            <el-icon><Plus /></el-icon>
           </div>
           <div class="stat-body">
             <div class="stat-value">{{ stats.medDue }}</div>
@@ -156,7 +156,7 @@
             </div>
             <div class="action-item" @click="go('/nurse/medications')">
               <div class="action-icon" style="background: rgba(124,58,237,0.1); color: #7c3aed">
-                <el-icon><MedicineBox /></el-icon>
+                <el-icon><Plus /></el-icon>
               </div>
               <div class="action-text">
                 <div class="action-name">执行用药</div>
@@ -238,7 +238,7 @@
             <div class="progress-item">
               <div class="progress-item-left">
                 <div class="progress-icon orange">
-                  <el-icon><MedicineBox /></el-icon>
+                  <el-icon><Plus /></el-icon>
                 </div>
                 <div>
                   <div class="progress-name">用药执行</div>
@@ -370,7 +370,7 @@ import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import { ElMessage } from "element-plus";
 import {
-  List, MedicineBox, TrendCharts, Warning, WarningFilled,
+  List, TrendCharts, Warning, WarningFilled,
   Tickets, UserPlus, ArrowRight, CircleCheck, CircleCheckFilled,
   Document, Plus, Memo, Close,
 } from "@element-plus/icons-vue";

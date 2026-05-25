@@ -216,7 +216,7 @@ const replyDlg = ref(false);
 const currentFeedback = ref(null);
 
 const feedbackTypes = [
-  { value: "服务反馈", label: "服务反馈", icon: "Service", bg: "rgba(13,148,136,0.1)", color: "#0d9488" },
+  { value: "服务反馈", label: "服务反馈", icon: "Service", bg: "rgba(13,148,136,0.1)", color: "#e11d48" },
   { value: "意见建议", label: "意见建议", icon: "Lightbulb", bg: "rgba(245,158,11,0.1)", color: "#d97706" },
   { value: "预约探访", label: "预约探访", icon: "Calendar", bg: "rgba(14,116,144,0.1)", color: "#0e7490" },
   { value: "投诉", label: "投诉", icon: "Warning", bg: "rgba(220,38,38,0.1)", color: "#dc2626" },
@@ -318,7 +318,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(135deg, #0e7490, #06b6d4);
+  background: linear-gradient(135deg, #be185d, #f43f5e);
   border-radius: 16px;
   padding: 22px 28px;
   color: #fff;
@@ -404,8 +404,8 @@ onMounted(async () => {
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: rgba(13, 148, 136, 0.1);
-  color: #0d9488;
+  background: rgba(244, 63, 94, 0.1);
+  color: #e11d48;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -452,9 +452,9 @@ onMounted(async () => {
   }
 
   &.active {
-    border-color: #0d9488;
-    background: #f0fdf9;
-    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+    border-color: #f43f5e;
+    background: #fff5f7;
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
   }
 }
 
@@ -503,26 +503,26 @@ onMounted(async () => {
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, #0e7490, #06b6d4);
+  background: linear-gradient(135deg, #be185d, #f43f5e);
   border: none;
   font-weight: 600;
   &:hover {
-    background: linear-gradient(135deg, #0c6680, #0e7490);
+    background: linear-gradient(135deg, #9f1239, #be185d);
   }
 }
 
 // ========== 历史记录卡片 ==========
 .history-card {
   .card-icon {
-    background: rgba(13, 148, 136, 0.1);
-    color: #0d9488;
+    background: rgba(244, 63, 94, 0.1);
+    color: #e11d48;
   }
 }
 
 .list-count {
   font-size: 13px;
   color: var(--el-text-color-secondary, #64748b);
-  strong { color: #0d9488; font-weight: 700; }
+  strong { color: #be185d; font-weight: 700; }
 }
 
 .empty-state {
@@ -567,7 +567,7 @@ onMounted(async () => {
   transition: all 0.2s;
 
   &:hover {
-    border-color: rgba(13, 148, 136, 0.25);
+    border-color: rgba(244, 63, 94, 0.25);
     background: #f0fdf9;
     transform: translateX(2px);
   }
@@ -630,7 +630,7 @@ onMounted(async () => {
 .item-reply {
   margin-top: 10px;
   background: #f0fdf9;
-  border: 1px solid rgba(13, 148, 136, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.12);
   border-radius: 10px;
   padding: 10px 14px;
 }
@@ -640,7 +640,7 @@ onMounted(async () => {
   align-items: center;
   font-size: 11px;
   font-weight: 700;
-  color: #0d9488;
+  color: #e11d48;
   margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -667,7 +667,7 @@ onMounted(async () => {
 }
 
 .feedback-item:hover .item-arrow {
-  color: #0d9488;
+  color: #e11d48;
 }
 
 // ========== 详情弹窗 ==========
@@ -719,7 +719,7 @@ onMounted(async () => {
 }
 
 .reply-section-label {
-  color: #0d9488;
+  color: #e11d48;
   display: flex;
   align-items: center;
 }
@@ -737,7 +737,7 @@ onMounted(async () => {
 
 .reply-section-content {
   background: #f0fdf9;
-  border: 1px solid rgba(13, 148, 136, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.12);
   color: #16a34a;
 }
 

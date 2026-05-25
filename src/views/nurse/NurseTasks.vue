@@ -172,9 +172,6 @@
       <template #footer>
         <el-button size="large" @click="dlg = false">取消</el-button>
         <el-button type="primary" size="large" @click="submit">
-          <el-icon style="margin-right: 4px">
-            {{ mode === 'done' ? '<Check />' : '<Check />' }}
-          </el-icon>
           {{ mode === 'done' ? '确认完成' : '保存备注' }}
         </el-button>
       </template>

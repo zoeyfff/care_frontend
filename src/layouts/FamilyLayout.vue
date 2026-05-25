@@ -11,17 +11,13 @@
           :collapse="collapsed"
           :collapse-transition="false"
           router
-          background-color="#7c3aed"
+          background-color="#be185d"
           text-color="rgba(255,255,255,0.85)"
-          active-text-color="#c4b5fd"
+          active-text-color="#fda4af"
         >
           <el-menu-item index="/family/dashboard">
             <el-icon><Odometer /></el-icon>
             <span>首页概览</span>
-          </el-menu-item>
-          <el-menu-item index="/family/elder-info">
-            <el-icon><User /></el-icon>
-            <span>长者健康</span>
           </el-menu-item>
           <el-menu-item index="/family/bills">
             <el-icon><Wallet /></el-icon>
@@ -138,7 +134,7 @@ async function onUserCommand(cmd) {
   display: flex;
   flex-direction: column;
   transition: width 0.2s ease;
-  box-shadow: 2px 0 12px rgba(124, 58, 237, 0.15);
+  box-shadow: 2px 0 12px rgba(244, 63, 94, 0.15);
 }
 
 .logo {
@@ -154,7 +150,7 @@ async function onUserCommand(cmd) {
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #a78bfa, #7c3aed);
+    background: linear-gradient(135deg, #be185d, #f43f5e);
     color: #fff;
     font-weight: 700;
     font-size: 18px;
@@ -176,7 +172,7 @@ async function onUserCommand(cmd) {
 }
 
 :deep(.el-menu-item.is-active) {
-  background: rgba(139, 92, 246, 0.18) !important;
+  background: rgba(244, 63, 94, 0.18) !important;
 }
 
 .staff-main-wrap {
@@ -191,7 +187,7 @@ async function onUserCommand(cmd) {
   justify-content: space-between;
   padding: 0 20px;
   background: #fff;
-  box-shadow: 0 1px 0 rgba(124, 58, 237, 0.06);
+  box-shadow: 0 1px 0 rgba(244, 63, 94, 0.06);
   z-index: 2;
 }
 
@@ -203,8 +199,8 @@ async function onUserCommand(cmd) {
 }
 
 .collapse-btn {
-  border-color: #ddd6fe;
-  color: #7c3aed;
+  border-color: #fecdd3;
+  color: #be185d;
 }
 
 .header-right {
@@ -221,7 +217,7 @@ async function onUserCommand(cmd) {
   color: var(--staff-text);
 
   .avatar {
-    background: #7c3aed;
+    background: linear-gradient(135deg, #be185d, #f43f5e);
     color: #fff;
     font-size: 14px;
   }
